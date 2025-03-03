@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>Relational entities for the NHibernate 5.x stores.</Description>
+    <PackageTags>OpenIddict;NHibernate;Models</PackageTags>
+  </PropertyGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-# OpenIddict.AmazonDynamoDB
+# OpenIddict.NHibernate
 
 ![Build Status](https://github.com/vruss/OpenIddict.NHibernate/actions/workflows/ci-cd.yml/badge.svg) [![codecov](https://codecov.io/gh/vruss/OpenIddict.NHibernate/branch/main/graph/badge.svg?token=TODO)](https://codecov.io/gh/vruss/OpenIddict.NHibernate) [![NuGet](https://img.shields.io/nuget/v/Community.OpenIddict.NHibernate)](https://www.nuget.org/packages/Community.OpenIddict.NHibernate)
 
