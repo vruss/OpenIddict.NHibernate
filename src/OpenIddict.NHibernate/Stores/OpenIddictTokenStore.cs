@@ -13,12 +13,11 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NHibernate;
-using NHibernate.Cfg;
 using NHibernate.Linq;
 using OpenIddict.Abstractions;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Stores
 {
     /// <summary>
     /// Provides methods allowing to manage the tokens stored in a database.
@@ -72,9 +71,9 @@ namespace OpenIddict.NHibernate
             [NotNull] IOpenIddictNHibernateContext context,
             [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
         {
-            Cache = cache;
-            Context = context;
-            Options = options;
+            this.Cache = cache;
+            this.Context = context;
+            this.Options = options;
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace OpenIddict.NHibernate
         /// </returns>
         public virtual async ValueTask<long> CountAsync(CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await session.Query<TToken>().LongCountAsync(cancellationToken);
         }
 
@@ -123,7 +122,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await query(session.Query<TToken>()).LongCountAsync(cancellationToken);
         }
 
@@ -140,7 +139,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             await session.SaveAsync(token, cancellationToken);
             await session.FlushAsync(cancellationToken);
         }
@@ -158,7 +157,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             try
             {
@@ -200,8 +199,8 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
-                var key = ConvertIdentifierFromString(client);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
+                var key = this.ConvertIdentifierFromString(client);
 
                 await foreach (var token in (from token in session.Query<TToken>()
                                                                   .Fetch(token => token.Application)
@@ -247,8 +246,8 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
-                var key = ConvertIdentifierFromString(client);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
+                var key = this.ConvertIdentifierFromString(client);
 
                 await foreach (var token in (from token in session.Query<TToken>()
                                                                   .Fetch(token => token.Application)
@@ -301,8 +300,8 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
-                var key = ConvertIdentifierFromString(client);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
+                var key = this.ConvertIdentifierFromString(client);
 
                 await foreach (var token in (from token in session.Query<TToken>()
                                                                   .Fetch(token => token.Application)
@@ -336,8 +335,8 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
-                var key = ConvertIdentifierFromString(identifier);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
+                var key = this.ConvertIdentifierFromString(identifier);
 
                 await foreach (var token in (from token in session.Query<TToken>()
                                                                   .Fetch(token => token.Application)
@@ -368,8 +367,8 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
-                var key = ConvertIdentifierFromString(identifier);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
+                var key = this.ConvertIdentifierFromString(identifier);
 
                 await foreach (var token in (from token in session.Query<TToken>()
                                                                   .Fetch(token => token.Application)
@@ -399,8 +398,8 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentException("The identifier cannot be null or empty.", nameof(identifier));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
-            return await session.GetAsync<TToken>(ConvertIdentifierFromString(identifier), cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
+            return await session.GetAsync<TToken>(this.ConvertIdentifierFromString(identifier), cancellationToken);
         }
 
         /// <summary>
@@ -420,7 +419,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentException("The identifier cannot be null or empty.", nameof(identifier));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             return await (from token in session.Query<TToken>()
                                                .Fetch(token => token.Application)
@@ -446,7 +445,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 await foreach (var token in (from token in session.Query<TToken>()
                                                                   .Fetch(token => token.Application)
@@ -480,7 +479,7 @@ namespace OpenIddict.NHibernate
                 return new ValueTask<string>(result: null);
             }
 
-            return new ValueTask<string>(ConvertIdentifierToString(token.Application.Id));
+            return new ValueTask<string>(this.ConvertIdentifierToString(token.Application.Id));
         }
 
         /// <summary>
@@ -504,7 +503,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             return await query(
                 session.Query<TToken>().Fetch(token => token.Application)
@@ -532,7 +531,7 @@ namespace OpenIddict.NHibernate
                 return new ValueTask<string>(result: null);
             }
 
-            return new ValueTask<string>(ConvertIdentifierToString(token.Authorization.Id));
+            return new ValueTask<string>(this.ConvertIdentifierToString(token.Authorization.Id));
         }
 
         /// <summary>
@@ -589,7 +588,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(token));
             }
 
-            return new ValueTask<string>(ConvertIdentifierToString(token.Id));
+            return new ValueTask<string>(this.ConvertIdentifierToString(token.Id));
         }
 
         /// <summary>
@@ -635,7 +634,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified properties is an expensive operation.
             // To mitigate that, the resulting object is stored in the memory cache.
             var key = string.Concat("d0509397-1bbf-40e7-97e1-5e6d7bc2536c", "\x1e", token.Properties);
-            var properties = Cache.GetOrCreate(key, entry =>
+            var properties = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -760,7 +759,7 @@ namespace OpenIddict.NHibernate
         public virtual async IAsyncEnumerable<TToken> ListAsync(
             [CanBeNull] int? count, [CanBeNull] int? offset, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             var query = session.Query<TToken>()
                                .Fetch(token => token.Application)
                                .Fetch(token => token.Authorization)
@@ -805,7 +804,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TResult> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 await foreach (var element in query(
                     session.Query<TToken>()
@@ -824,7 +823,7 @@ namespace OpenIddict.NHibernate
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual async ValueTask PruneAsync(CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             await (from token in session.Query<TToken>()
                    where token.Status != OpenIddictConstants.Statuses.Valid ||
@@ -849,11 +848,11 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             if (!string.IsNullOrEmpty(identifier))
             {
-                token.Application = await session.LoadAsync<TApplication>(ConvertIdentifierFromString(identifier), cancellationToken);
+                token.Application = await session.LoadAsync<TApplication>(this.ConvertIdentifierFromString(identifier), cancellationToken);
             }
 
             else
@@ -877,11 +876,11 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             if (!string.IsNullOrEmpty(identifier))
             {
-                token.Authorization = await session.LoadAsync<TAuthorization>(ConvertIdentifierFromString(identifier), cancellationToken);
+                token.Authorization = await session.LoadAsync<TAuthorization>(this.ConvertIdentifierFromString(identifier), cancellationToken);
             }
 
             else
@@ -1071,7 +1070,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             try
             {

@@ -4,10 +4,10 @@ using System.Text;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
-using OpenIddict.Extensions;
 using OpenIddict.NHibernate.Models;
+using OpenIddict.NHibernate.Stores;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Resolvers
 {
     /// <summary>
     /// Exposes a method allowing to resolve an authorization store.
@@ -21,8 +21,8 @@ namespace OpenIddict.NHibernate
             [NotNull] TypeResolutionCache cache,
             [NotNull] IServiceProvider provider)
         {
-            _cache = cache;
-            _provider = provider;
+            this._cache = cache;
+            this._provider = provider;
         }
 
         /// <summary>
@@ -33,13 +33,13 @@ namespace OpenIddict.NHibernate
         /// <returns>An <see cref="IOpenIddictAuthorizationStore{TAuthorization}"/>.</returns>
         public IOpenIddictAuthorizationStore<TAuthorization> Get<TAuthorization>() where TAuthorization : class
         {
-            var store = _provider.GetService<IOpenIddictAuthorizationStore<TAuthorization>>();
+            var store = this._provider.GetService<IOpenIddictAuthorizationStore<TAuthorization>>();
             if (store != null)
             {
                 return store;
             }
 
-            var type = _cache.GetOrAdd(typeof(TAuthorization), key =>
+            var type = this._cache.GetOrAdd(typeof(TAuthorization), key =>
             {
                 var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictAuthorization<,,>));
                 if (root == null)
@@ -59,7 +59,7 @@ namespace OpenIddict.NHibernate
                     /* TKey: */ root.GenericTypeArguments[0]);
             });
 
-            return (IOpenIddictAuthorizationStore<TAuthorization>) _provider.GetRequiredService(type);
+            return (IOpenIddictAuthorizationStore<TAuthorization>) this._provider.GetRequiredService(type);
         }
 
         // Note: NHibernate resolvers are registered as scoped dependencies as their inner

@@ -4,7 +4,7 @@ using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Mappings
 {
     /// <summary>
     /// Defines a relational mapping for the Application entity.
@@ -22,54 +22,54 @@ namespace OpenIddict.NHibernate
     {
         public OpenIddictApplicationMapping()
         {
-            Id(application => application.Id, map =>
+            this.Id(application => application.Id, map =>
             {
                 map.Generator(Generators.Identity);
             });
 
-            Version(application => application.Version, map =>
+            this.Version(application => application.Version, map =>
             {
                 map.Insert(true);
             });
 
-            Property(application => application.ClientId, map =>
+            this.Property(application => application.ClientId, map =>
             {
                 map.NotNullable(true);
                 map.Unique(true);
             });
 
-            Property(application => application.ClientSecret);
+            this.Property(application => application.ClientSecret);
 
-            Property(application => application.ConsentType);
+            this.Property(application => application.ConsentType);
 
-            Property(application => application.DisplayName);
+            this.Property(application => application.DisplayName);
 
-            Property(application => application.Permissions, map =>
+            this.Property(application => application.Permissions, map =>
             {
                 map.Length(10000);
             });
 
-            Property(application => application.PostLogoutRedirectUris, map =>
+            this.Property(application => application.PostLogoutRedirectUris, map =>
             {
                 map.Length(10000);
             });
 
-            Property(application => application.Properties, map =>
+            this.Property(application => application.Properties, map =>
             {
                 map.Length(10000);
             });
 
-            Property(application => application.RedirectUris, map =>
+            this.Property(application => application.RedirectUris, map =>
             {
                 map.Length(10000);
             });
 
-            Property(application => application.Type, map =>
+            this.Property(application => application.Type, map =>
             {
                 map.NotNullable(true);
             });
 
-            Bag(application => application.Authorizations,
+            this.Bag(application => application.Authorizations,
                 map =>
                 {
                     map.Key(key => key.Column("ApplicationId"));
@@ -79,7 +79,7 @@ namespace OpenIddict.NHibernate
                     map.OneToMany();
                 });
 
-            Bag(application => application.Tokens,
+            this.Bag(application => application.Tokens,
                 map =>
                 {
                     map.Key(key => key.Column("ApplicationId"));
@@ -89,7 +89,7 @@ namespace OpenIddict.NHibernate
                     map.OneToMany();
                 });
 
-            Table("OpenIddictApplications");
+            this.Table("OpenIddictApplications");
         }
     }
 }

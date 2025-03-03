@@ -13,12 +13,11 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NHibernate;
-using NHibernate.Cfg;
 using NHibernate.Linq;
 using OpenIddict.Abstractions;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Stores
 {
     /// <summary>
     /// Provides methods allowing to manage the applications stored in a database.
@@ -72,9 +71,9 @@ namespace OpenIddict.NHibernate
             [NotNull] IOpenIddictNHibernateContext context,
             [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
         {
-            Cache = cache;
-            Context = context;
-            Options = options;
+            this.Cache = cache;
+            this.Context = context;
+            this.Options = options;
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace OpenIddict.NHibernate
         /// </returns>
         public virtual async ValueTask<long> CountAsync(CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await session.Query<TApplication>().LongCountAsync(cancellationToken);
         }
 
@@ -123,7 +122,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await query(session.Query<TApplication>()).LongCountAsync(cancellationToken);
         }
 
@@ -140,7 +139,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(application));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             await session.PersistAsync(application, cancellationToken);
             await session.FlushAsync(cancellationToken);
         }
@@ -158,7 +157,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(application));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             try
             {
@@ -201,7 +200,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentException("The identifier cannot be null or empty.", nameof(identifier));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             return await (from application in session.Query<TApplication>()
                           where application.ClientId == identifier
@@ -224,8 +223,8 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentException("The identifier cannot be null or empty.", nameof(identifier));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
-            return await session.GetAsync<TApplication>(ConvertIdentifierFromString(identifier), cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
+            return await session.GetAsync<TApplication>(this.ConvertIdentifierFromString(identifier), cancellationToken);
         }
 
         /// <summary>
@@ -245,7 +244,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TApplication> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 // To optimize the efficiency of the query a bit, only applications whose stringified
                 // PostLogoutRedirectUris contains the specified URL are returned. Once the applications
@@ -255,7 +254,7 @@ namespace OpenIddict.NHibernate
                 await foreach (var application in session.Query<TApplication>()
                     .Where(application => application.PostLogoutRedirectUris.Contains(address))
                     .AsAsyncEnumerable(cancellationToken)
-                    .WhereAwait(async application => (await GetPostLogoutRedirectUrisAsync(application, cancellationToken))
+                    .WhereAwait(async application => (await this.GetPostLogoutRedirectUrisAsync(application, cancellationToken))
                         .Contains(address, StringComparer.Ordinal)))
                 {
                     yield return application;
@@ -280,7 +279,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TApplication> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 // To optimize the efficiency of the query a bit, only applications whose stringified
                 // RedirectUris contains the specified URL are returned. Once the applications
@@ -290,7 +289,7 @@ namespace OpenIddict.NHibernate
                 await foreach (var application in session.Query<TApplication>()
                     .Where(application => application.RedirectUris.Contains(address))
                     .AsAsyncEnumerable(cancellationToken)
-                    .WhereAwait(async application => (await GetRedirectUrisAsync(application, cancellationToken))
+                    .WhereAwait(async application => (await this.GetRedirectUrisAsync(application, cancellationToken))
                         .Contains(address, StringComparer.Ordinal)))
                 {
                     yield return application;
@@ -319,7 +318,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await query(session.Query<TApplication>(), state).FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -436,7 +435,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(application));
             }
 
-            return new ValueTask<string>(ConvertIdentifierToString(application.Id));
+            return new ValueTask<string>(this.ConvertIdentifierToString(application.Id));
         }
 
         /// <summary>
@@ -463,7 +462,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified permissions is an expensive operation.
             // To mitigate that, the resulting array is stored in the memory cache.
             var key = string.Concat("0347e0aa-3a26-410a-97e8-a83bdeb21a1f", "\x1e", application.Permissions);
-            var permissions = Cache.GetOrCreate(key, entry =>
+            var permissions = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -498,7 +497,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified addresses is an expensive operation.
             // To mitigate that, the resulting array is stored in the memory cache.
             var key = string.Concat("fb14dfb9-9216-4b77-bfa9-7e85f8201ff4", "\x1e", application.PostLogoutRedirectUris);
-            var addresses = Cache.GetOrCreate(key, entry =>
+            var addresses = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -533,7 +532,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified properties is an expensive operation.
             // To mitigate that, the resulting object is stored in the memory cache.
             var key = string.Concat("2e3e9680-5654-48d8-a27d-b8bb4f0f1d50", "\x1e", application.Properties);
-            var properties = Cache.GetOrCreate(key, entry =>
+            var properties = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -568,7 +567,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified addresses is an expensive operation.
             // To mitigate that, the resulting array is stored in the memory cache.
             var key = string.Concat("851d6f08-2ee0-4452-bbe5-ab864611ecaa", "\x1e", application.RedirectUris);
-            var addresses = Cache.GetOrCreate(key, entry =>
+            var addresses = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -603,7 +602,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified requirements is an expensive operation.
             // To mitigate that, the resulting array is stored in the memory cache.
             var key = string.Concat("b4808a89-8969-4512-895f-a909c62a8995", "\x1e", application.Requirements);
-            var requirements = Cache.GetOrCreate(key, entry =>
+            var requirements = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -650,7 +649,7 @@ namespace OpenIddict.NHibernate
         public virtual async IAsyncEnumerable<TApplication> ListAsync(
             [CanBeNull] int? count, [CanBeNull] int? offset, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             var query = session.Query<TApplication>()
                                .OrderBy(application => application.Id)
                                .AsQueryable();
@@ -693,7 +692,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TResult> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 await foreach (var element in query(session.Query<TApplication>(), state).AsAsyncEnumerable(cancellationToken))
                 {
@@ -970,7 +969,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(application));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             try
             {

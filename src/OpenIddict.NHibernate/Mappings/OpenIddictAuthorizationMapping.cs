@@ -4,7 +4,7 @@ using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Mappings
 {
     /// <summary>
     /// Defines a relational mapping for the Authorization entity.
@@ -22,42 +22,42 @@ namespace OpenIddict.NHibernate
     {
         public OpenIddictAuthorizationMapping()
         {
-            Id(authorization => authorization.Id, map =>
+            this.Id(authorization => authorization.Id, map =>
             {
                 map.Generator(Generators.Identity);
             });
 
-            Version(authorization => authorization.Version, map =>
+            this.Version(authorization => authorization.Version, map =>
             {
                 map.Insert(true);
             });
 
-            Property(authorization => authorization.Properties, map =>
+            this.Property(authorization => authorization.Properties, map =>
             {
                 map.Length(10000);
             });
 
-            Property(authorization => authorization.Scopes, map =>
+            this.Property(authorization => authorization.Scopes, map =>
             {
                 map.Length(10000);
             });
 
-            Property(authorization => authorization.Status, map =>
+            this.Property(authorization => authorization.Status, map =>
             {
                 map.NotNullable(true);
             });
 
-            Property(authorization => authorization.Type, map =>
+            this.Property(authorization => authorization.Type, map =>
             {
                 map.NotNullable(true);
             });
 
-            ManyToOne(authorization => authorization.Application, map =>
+            this.ManyToOne(authorization => authorization.Application, map =>
             {
                 map.ForeignKey("ApplicationId");
             });
 
-            Bag(authorization => authorization.Tokens,
+            this.Bag(authorization => authorization.Tokens,
                 map =>
                 {
                     map.Key(key => key.Column("AuthorizationId"));
@@ -67,7 +67,7 @@ namespace OpenIddict.NHibernate
                     map.OneToMany();
                 });
 
-            Table("OpenIddictAuthorizations");
+            this.Table("OpenIddictAuthorizations");
         }
     }
 }

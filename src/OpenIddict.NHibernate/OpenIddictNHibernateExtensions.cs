@@ -1,10 +1,12 @@
 using System;
 using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OpenIddict.NHibernate;
 using OpenIddict.NHibernate.Models;
+using OpenIddict.NHibernate.Resolvers;
+using OpenIddict.NHibernate.Stores;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace OpenIddict.NHibernate
 {
     /// <summary>
     /// Exposes extensions allowing to register the OpenIddict NHibernate services.

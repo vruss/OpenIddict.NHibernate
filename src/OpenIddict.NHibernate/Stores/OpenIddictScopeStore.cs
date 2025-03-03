@@ -13,12 +13,11 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NHibernate;
-using NHibernate.Cfg;
 using NHibernate.Linq;
 using OpenIddict.Abstractions;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Stores
 {
     /// <summary>
     /// Provides methods allowing to manage the scopes stored in a database.
@@ -64,9 +63,9 @@ namespace OpenIddict.NHibernate
             [NotNull] IOpenIddictNHibernateContext context,
             [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
         {
-            Cache = cache;
-            Context = context;
-            Options = options;
+            this.Cache = cache;
+            this.Context = context;
+            this.Options = options;
         }
 
         /// <summary>
@@ -94,7 +93,7 @@ namespace OpenIddict.NHibernate
         /// </returns>
         public virtual async ValueTask<long> CountAsync(CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await session.Query<TScope>().LongCountAsync(cancellationToken);
         }
 
@@ -115,7 +114,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await query(session.Query<TScope>()).LongCountAsync(cancellationToken);
         }
 
@@ -132,7 +131,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(scope));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             await session.SaveAsync(scope, cancellationToken);
             await session.FlushAsync(cancellationToken);
         }
@@ -150,7 +149,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(scope));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             try
             {
@@ -183,8 +182,8 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentException("The identifier cannot be null or empty.", nameof(identifier));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
-            return await session.GetAsync<TScope>(ConvertIdentifierFromString(identifier), cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
+            return await session.GetAsync<TScope>(this.ConvertIdentifierFromString(identifier), cancellationToken);
         }
 
         /// <summary>
@@ -203,7 +202,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentException("The scope name cannot be null or empty.", nameof(name));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             return await (from scope in session.Query<TScope>()
                           where scope.Name == name
@@ -227,7 +226,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TScope> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 // Note: Enumerable.Contains() is deliberately used without the extension method syntax to ensure
                 // ImmutableArray.Contains() (which is not fully supported by NHibernate) is not used instead.
@@ -257,7 +256,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TScope> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 // To optimize the efficiency of the query a bit, only scopes whose stringified
                 // Resources column contains the specified resource are returned. Once the scopes
@@ -267,7 +266,7 @@ namespace OpenIddict.NHibernate
                 await foreach (var scope in session.Query<TScope>()
                     .Where(scope => scope.Resources.Contains(resource))
                     .AsAsyncEnumerable(cancellationToken)
-                    .WhereAwait(async scope => (await GetResourcesAsync(scope, cancellationToken)).Contains(resource, StringComparer.Ordinal)))
+                    .WhereAwait(async scope => (await this.GetResourcesAsync(scope, cancellationToken)).Contains(resource, StringComparer.Ordinal)))
                 {
                     yield return scope;
                 }
@@ -295,7 +294,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             return await query(session.Query<TScope>(), state).FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -353,7 +352,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(scope));
             }
 
-            return new ValueTask<string>(ConvertIdentifierToString(scope.Id));
+            return new ValueTask<string>(this.ConvertIdentifierToString(scope.Id));
         }
 
         /// <summary>
@@ -399,7 +398,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified properties is an expensive operation.
             // To mitigate that, the resulting object is stored in the memory cache.
             var key = string.Concat("78d8dfdd-3870-442e-b62e-dc9bf6eaeff7", "\x1e", scope.Properties);
-            var properties = Cache.GetOrCreate(key, entry =>
+            var properties = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -434,7 +433,7 @@ namespace OpenIddict.NHibernate
             // Note: parsing the stringified resources is an expensive operation.
             // To mitigate that, the resulting array is stored in the memory cache.
             var key = string.Concat("b6148250-aede-4fb9-a621-07c9bcf238c3", "\x1e", scope.Resources);
-            var resources = Cache.GetOrCreate(key, entry =>
+            var resources = this.Cache.GetOrCreate(key, entry =>
             {
                 entry.SetPriority(CacheItemPriority.High)
                      .SetSlidingExpiration(TimeSpan.FromMinutes(1));
@@ -481,7 +480,7 @@ namespace OpenIddict.NHibernate
         public virtual async IAsyncEnumerable<TScope> ListAsync(
             [CanBeNull] int? count, [CanBeNull] int? offset, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
             var query = session.Query<TScope>()
                                .OrderBy(scope => scope.Id)
                                .AsQueryable();
@@ -524,7 +523,7 @@ namespace OpenIddict.NHibernate
 
             async IAsyncEnumerable<TResult> ExecuteAsync(CancellationToken cancellationToken)
             {
-                var session = await Context.GetSessionAsync(cancellationToken);
+                var session = await this.Context.GetSessionAsync(cancellationToken);
 
                 await foreach (var element in query(session.Query<TScope>(), state).AsAsyncEnumerable(cancellationToken))
                 {
@@ -664,7 +663,7 @@ namespace OpenIddict.NHibernate
                 throw new ArgumentNullException(nameof(scope));
             }
 
-            var session = await Context.GetSessionAsync(cancellationToken);
+            var session = await this.Context.GetSessionAsync(cancellationToken);
 
             try
             {

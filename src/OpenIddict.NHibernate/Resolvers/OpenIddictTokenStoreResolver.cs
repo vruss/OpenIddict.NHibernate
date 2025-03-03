@@ -4,10 +4,10 @@ using System.Text;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
-using OpenIddict.Extensions;
 using OpenIddict.NHibernate.Models;
+using OpenIddict.NHibernate.Stores;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Resolvers
 {
     /// <summary>
     /// Exposes a method allowing to resolve a token store.
@@ -21,8 +21,8 @@ namespace OpenIddict.NHibernate
             [NotNull] TypeResolutionCache cache,
             [NotNull] IServiceProvider provider)
         {
-            _cache = cache;
-            _provider = provider;
+            this._cache = cache;
+            this._provider = provider;
         }
 
         /// <summary>
@@ -33,13 +33,13 @@ namespace OpenIddict.NHibernate
         /// <returns>An <see cref="IOpenIddictTokenStore{TToken}"/>.</returns>
         public IOpenIddictTokenStore<TToken> Get<TToken>() where TToken : class
         {
-            var store = _provider.GetService<IOpenIddictTokenStore<TToken>>();
+            var store = this._provider.GetService<IOpenIddictTokenStore<TToken>>();
             if (store != null)
             {
                 return store;
             }
 
-            var type = _cache.GetOrAdd(typeof(TToken), key =>
+            var type = this._cache.GetOrAdd(typeof(TToken), key =>
             {
                 var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictToken<,,>));
                 if (root == null)
@@ -59,7 +59,7 @@ namespace OpenIddict.NHibernate
                     /* TKey: */ root.GenericTypeArguments[0]);
             });
 
-            return (IOpenIddictTokenStore<TToken>) _provider.GetRequiredService(type);
+            return (IOpenIddictTokenStore<TToken>) this._provider.GetRequiredService(type);
         }
 
         // Note: NHibernate resolvers are registered as scoped dependencies as their inner

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
+using NHibernate.Cfg;
 using NHibernate.Linq;
 using NHibernate.Mapping.ByCode;
-using OpenIddict.NHibernate;
+using OpenIddict.NHibernate.Mappings;
 using OpenIddict.NHibernate.Models;
 
-namespace NHibernate.Cfg
+namespace OpenIddict.NHibernate
 {
     /// <summary>
     /// Exposes extensions simplifying the integration between OpenIddict and NHibernate.

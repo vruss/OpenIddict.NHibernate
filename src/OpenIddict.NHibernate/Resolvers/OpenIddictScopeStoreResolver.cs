@@ -4,10 +4,10 @@ using System.Text;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
-using OpenIddict.Extensions;
 using OpenIddict.NHibernate.Models;
+using OpenIddict.NHibernate.Stores;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Resolvers
 {
     /// <summary>
     /// Exposes a method allowing to resolve a scope store.
@@ -21,8 +21,8 @@ namespace OpenIddict.NHibernate
             [NotNull] TypeResolutionCache cache,
             [NotNull] IServiceProvider provider)
         {
-            _cache = cache;
-            _provider = provider;
+            this._cache = cache;
+            this._provider = provider;
         }
 
         /// <summary>
@@ -33,13 +33,13 @@ namespace OpenIddict.NHibernate
         /// <returns>An <see cref="IOpenIddictScopeStore{TScope}"/>.</returns>
         public IOpenIddictScopeStore<TScope> Get<TScope>() where TScope : class
         {
-            var store = _provider.GetService<IOpenIddictScopeStore<TScope>>();
+            var store = this._provider.GetService<IOpenIddictScopeStore<TScope>>();
             if (store != null)
             {
                 return store;
             }
 
-            var type = _cache.GetOrAdd(typeof(TScope), key =>
+            var type = this._cache.GetOrAdd(typeof(TScope), key =>
             {
                 var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictScope<>));
                 if (root == null)
@@ -57,7 +57,7 @@ namespace OpenIddict.NHibernate
                     /* TKey: */ root.GenericTypeArguments[0]);
             });
 
-            return (IOpenIddictScopeStore<TScope>) _provider.GetRequiredService(type);
+            return (IOpenIddictScopeStore<TScope>) this._provider.GetRequiredService(type);
         }
 
         // Note: NHibernate resolvers are registered as scoped dependencies as their inner

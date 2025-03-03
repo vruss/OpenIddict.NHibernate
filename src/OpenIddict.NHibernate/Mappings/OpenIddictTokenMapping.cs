@@ -4,7 +4,7 @@ using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Mappings
 {
     /// <summary>
     /// Defines a relational mapping for the Token entity.
@@ -22,53 +22,53 @@ namespace OpenIddict.NHibernate
     {
         public OpenIddictTokenMapping()
         {
-            Id(token => token.Id, map =>
+            this.Id(token => token.Id, map =>
             {
                 map.Generator(Generators.Identity);
             });
 
-            Version(token => token.Version, map =>
+            this.Version(token => token.Version, map =>
             {
                 map.Insert(true);
             });
 
-            Property(token => token.CreationDate);
+            this.Property(token => token.CreationDate);
 
-            Property(token => token.ExpirationDate);
+            this.Property(token => token.ExpirationDate);
 
-            Property(token => token.Payload, map =>
+            this.Property(token => token.Payload, map =>
             {
                 map.Length(10000);
             });
 
-            Property(token => token.Properties, map =>
+            this.Property(token => token.Properties, map =>
             {
                 map.Length(10000);
             });
 
-            Property(token => token.ReferenceId);
+            this.Property(token => token.ReferenceId);
 
-            Property(token => token.Status, map =>
+            this.Property(token => token.Status, map =>
             {
                 map.NotNullable(true);
             });
 
-            Property(token => token.Type, map =>
+            this.Property(token => token.Type, map =>
             {
                 map.NotNullable(true);
             });
 
-            ManyToOne(token => token.Application, map =>
+            this.ManyToOne(token => token.Application, map =>
             {
                 map.Column("ApplicationId");
             });
 
-            ManyToOne(token => token.Authorization, map =>
+            this.ManyToOne(token => token.Authorization, map =>
             {
                 map.Column("AuthorizationId");
             });
 
-            Table("OpenIddictTokens");
+            this.Table("OpenIddictTokens");
         }
     }
 }

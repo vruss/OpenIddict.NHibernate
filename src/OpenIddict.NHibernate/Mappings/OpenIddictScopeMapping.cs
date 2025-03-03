@@ -4,7 +4,7 @@ using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using OpenIddict.NHibernate.Models;
 
-namespace OpenIddict.NHibernate
+namespace OpenIddict.NHibernate.Mappings
 {
     /// <summary>
     /// Defines a relational mapping for the Scope entity.
@@ -18,40 +18,40 @@ namespace OpenIddict.NHibernate
     {
         public OpenIddictScopeMapping()
         {
-            Id(scope => scope.Id, map =>
+            this.Id(scope => scope.Id, map =>
             {
                 map.Generator(Generators.Identity);
             });
 
-            Version(scope => scope.Version, map =>
+            this.Version(scope => scope.Version, map =>
             {
                 map.Insert(true);
             });
 
-            Property(scope => scope.Description, map =>
+            this.Property(scope => scope.Description, map =>
             {
                 map.Length(10000);
             });
 
-            Property(scope => scope.DisplayName);
+            this.Property(scope => scope.DisplayName);
 
-            Property(scope => scope.Name, map =>
+            this.Property(scope => scope.Name, map =>
             {
                 map.NotNullable(true);
                 map.Unique(true);
             });
 
-            Property(scope => scope.Properties, map =>
+            this.Property(scope => scope.Properties, map =>
             {
                 map.Length(10000);
             });
 
-            Property(scope => scope.Resources, map =>
+            this.Property(scope => scope.Resources, map =>
             {
                 map.Length(10000);
             });
 
-            Table("OpenIddictScopes");
+            this.Table("OpenIddictScopes");
         }
     }
 }

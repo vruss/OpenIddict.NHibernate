@@ -1,12 +1,12 @@
 using System;
 using System.ComponentModel;
 using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using NHibernate;
 using OpenIddict.Core;
-using OpenIddict.NHibernate;
 using OpenIddict.NHibernate.Models;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace OpenIddict.NHibernate
 {
     /// <summary>
     /// Exposes the necessary methods required to configure the OpenIddict NHibernate services.
@@ -18,7 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <param name="services">The services collection.</param>
         public OpenIddictNHibernateBuilder([NotNull] IServiceCollection services)
-            => Services = services ?? throw new ArgumentNullException(nameof(services));
+            => this.Services = services ?? throw new ArgumentNullException(nameof(services));
 
         /// <summary>
         /// Gets the services collection.
@@ -39,7 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            Services.Configure(configuration);
+            this.Services.Configure(configuration);
 
             return this;
         }
@@ -57,7 +57,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(factory));
             }
 
-            return Configure(options => options.SessionFactory = factory);
+            return this.Configure(options => options.SessionFactory = factory);
         }
 
         /// <summary>
@@ -66,7 +66,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>The <see cref="OpenIddictNHibernateBuilder"/>.</returns>
         public OpenIddictNHibernateBuilder ReplaceDefaultEntities<TKey>()
             where TKey : IEquatable<TKey>
-            => ReplaceDefaultEntities<OpenIddictApplication<TKey>,
+            =>
+				this.ReplaceDefaultEntities<OpenIddictApplication<TKey>,
                                       OpenIddictAuthorization<TKey>,
                                       OpenIddictScope<TKey>,
                                       OpenIddictToken<TKey>, TKey>();
@@ -82,7 +83,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TToken : OpenIddictToken<TKey, TApplication, TAuthorization>
             where TKey : IEquatable<TKey>
         {
-            Services.Configure<OpenIddictCoreOptions>(options =>
+            this.Services.Configure<OpenIddictCoreOptions>(options =>
             {
                 options.DefaultApplicationType = typeof(TApplication);
                 options.DefaultAuthorizationType = typeof(TAuthorization);
