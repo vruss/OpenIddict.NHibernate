@@ -43,10 +43,10 @@ Or asynchronously:
 await OpenIddictNHibernateSetup.EnsureInitializedAsync(serviceProvider);
 ```
 
-
 ## Tests
 
-In order to run the tests, you need to have NHibernate running locally on `localhost:8000`. This can easily be done using [Docker](https://www.docker.com/) and the following command:
+In order to run the tests, you need to have NHibernate running locally on `localhost:8000`. This can easily be done
+using [Docker](https://www.docker.com/) and the following command:
 
 ```
 docker run -p 8000:8000 local~~~~/NHibernate-local
