@@ -27,9 +27,9 @@ namespace OpenIddict.NHibernate.Stores
                                                                              OpenIddictToken, string>
     {
         public OpenIddictAuthorizationStore(
-            [NotNull] IMemoryCache cache,
-            [NotNull] IOpenIddictNHibernateContext context,
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
+            IMemoryCache cache,
+            IOpenIddictNHibernateContext context,
+            IOptionsMonitor<OpenIddictNHibernateOptions> options)
             : base(cache, context, options)
         {
         }
@@ -45,9 +45,9 @@ namespace OpenIddict.NHibernate.Stores
         where TKey : IEquatable<TKey>
     {
         public OpenIddictAuthorizationStore(
-            [NotNull] IMemoryCache cache,
-            [NotNull] IOpenIddictNHibernateContext context,
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
+            IMemoryCache cache,
+            IOpenIddictNHibernateContext context,
+            IOptionsMonitor<OpenIddictNHibernateOptions> options)
             : base(cache, context, options)
         {
         }
@@ -67,9 +67,9 @@ namespace OpenIddict.NHibernate.Stores
         where TKey : IEquatable<TKey>
     {
         public OpenIddictAuthorizationStore(
-            [NotNull] IMemoryCache cache,
-            [NotNull] IOpenIddictNHibernateContext context,
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
+            IMemoryCache cache,
+            IOpenIddictNHibernateContext context,
+            IOptionsMonitor<OpenIddictNHibernateOptions> options)
         {
             this.Cache = cache;
             this.Context = context;
@@ -115,7 +115,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the number of authorizations that match the specified query.
         /// </returns>
-        public virtual async ValueTask<long> CountAsync<TResult>([NotNull] Func<IQueryable<TAuthorization>, IQueryable<TResult>> query, CancellationToken cancellationToken)
+        public virtual async ValueTask<long> CountAsync<TResult>(Func<IQueryable<TAuthorization>, IQueryable<TResult>> query, CancellationToken cancellationToken)
         {
             if (query == null)
             {
@@ -132,7 +132,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="authorization">The authorization to create.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask CreateAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual async ValueTask CreateAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -150,7 +150,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="authorization">The authorization to delete.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask DeleteAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual async ValueTask DeleteAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -188,7 +188,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The authorizations corresponding to the subject/client.</returns>
         public virtual IAsyncEnumerable<TAuthorization> FindAsync(
-            [NotNull] string subject, [NotNull] string client, CancellationToken cancellationToken)
+            string subject, string client, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(subject))
             {
@@ -228,8 +228,8 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The authorizations corresponding to the criteria.</returns>
         public virtual IAsyncEnumerable<TAuthorization> FindAsync(
-            [NotNull] string subject, [NotNull] string client,
-            [NotNull] string status, CancellationToken cancellationToken)
+            string subject, string client,
+            string status, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(subject))
             {
@@ -276,8 +276,8 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The authorizations corresponding to the criteria.</returns>
         public virtual IAsyncEnumerable<TAuthorization> FindAsync(
-            [NotNull] string subject, [NotNull] string client,
-            [NotNull] string status, [NotNull] string type, CancellationToken cancellationToken)
+            string subject, string client,
+            string status, string type, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(subject))
             {
@@ -331,8 +331,8 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The authorizations corresponding to the criteria.</returns>
         public virtual IAsyncEnumerable<TAuthorization> FindAsync(
-            [NotNull] string subject, [NotNull] string client,
-            [NotNull] string status, [NotNull] string type,
+            string subject, string client,
+            string status, string type,
             ImmutableArray<string> scopes, CancellationToken cancellationToken)
             => this.FindAsync(subject, client, status, type, cancellationToken)
                 .WhereAwait(async authorization => new HashSet<string>(
@@ -345,7 +345,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The authorizations corresponding to the specified application.</returns>
         public virtual IAsyncEnumerable<TAuthorization> FindByApplicationIdAsync(
-            [NotNull] string identifier, CancellationToken cancellationToken)
+            string identifier, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(identifier))
             {
@@ -379,7 +379,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the authorization corresponding to the identifier.
         /// </returns>
-        public virtual async ValueTask<TAuthorization> FindByIdAsync([NotNull] string identifier, CancellationToken cancellationToken)
+        public virtual async ValueTask<TAuthorization> FindByIdAsync(string identifier, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(identifier))
             {
@@ -397,7 +397,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The authorizations corresponding to the specified subject.</returns>
         public virtual IAsyncEnumerable<TAuthorization> FindBySubjectAsync(
-            [NotNull] string subject, CancellationToken cancellationToken)
+            string subject, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(subject))
             {
@@ -429,7 +429,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the application identifier associated with the authorization.
         /// </returns>
-        public virtual ValueTask<string> GetApplicationIdAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetApplicationIdAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -457,7 +457,7 @@ namespace OpenIddict.NHibernate.Stores
         /// whose result returns the first element returned when executing the query.
         /// </returns>
         public virtual async ValueTask<TResult> GetAsync<TState, TResult>(
-            [NotNull] Func<IQueryable<TAuthorization>, TState, IQueryable<TResult>> query,
+            Func<IQueryable<TAuthorization>, TState, IQueryable<TResult>> query,
             [CanBeNull] TState state, CancellationToken cancellationToken)
         {
             if (query == null)
@@ -480,7 +480,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the unique identifier associated with the authorization.
         /// </returns>
-        public virtual ValueTask<string> GetIdAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetIdAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -499,7 +499,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns all the additional properties associated with the authorization.
         /// </returns>
-        public virtual ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -534,7 +534,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the scopes associated with the specified authorization.
         /// </returns>
-        public virtual ValueTask<ImmutableArray<string>> GetScopesAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableArray<string>> GetScopesAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -569,7 +569,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the status associated with the specified authorization.
         /// </returns>
-        public virtual ValueTask<string> GetStatusAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetStatusAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -588,7 +588,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the subject associated with the specified authorization.
         /// </returns>
-        public virtual ValueTask<string> GetSubjectAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetSubjectAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -607,7 +607,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the type associated with the specified authorization.
         /// </returns>
-        public virtual ValueTask<string> GetTypeAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetTypeAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {
@@ -685,7 +685,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>All the elements returned when executing the specified query.</returns>
         public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(
-            [NotNull] Func<IQueryable<TAuthorization>, TState, IQueryable<TResult>> query,
+            Func<IQueryable<TAuthorization>, TState, IQueryable<TResult>> query,
             [CanBeNull] TState state, CancellationToken cancellationToken)
         {
             if (query == null)
@@ -737,7 +737,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="identifier">The unique identifier associated with the client application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask SetApplicationIdAsync([NotNull] TAuthorization authorization,
+        public virtual async ValueTask SetApplicationIdAsync(TAuthorization authorization,
             [CanBeNull] string identifier, CancellationToken cancellationToken)
         {
             if (authorization == null)
@@ -765,7 +765,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="properties">The additional properties associated with the authorization.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetPropertiesAsync([NotNull] TAuthorization authorization,
+        public virtual ValueTask SetPropertiesAsync(TAuthorization authorization,
             [CanBeNull] ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
         {
             if (authorization == null)
@@ -796,7 +796,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="scopes">The scopes associated with the authorization.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetScopesAsync([NotNull] TAuthorization authorization,
+        public virtual ValueTask SetScopesAsync(TAuthorization authorization,
             ImmutableArray<string> scopes, CancellationToken cancellationToken)
         {
             if (authorization == null)
@@ -827,7 +827,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="status">The status associated with the authorization.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetStatusAsync([NotNull] TAuthorization authorization,
+        public virtual ValueTask SetStatusAsync(TAuthorization authorization,
             [CanBeNull] string status, CancellationToken cancellationToken)
         {
             if (authorization == null)
@@ -847,7 +847,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="subject">The subject associated with the authorization.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetSubjectAsync([NotNull] TAuthorization authorization,
+        public virtual ValueTask SetSubjectAsync(TAuthorization authorization,
             [CanBeNull] string subject, CancellationToken cancellationToken)
         {
             if (authorization == null)
@@ -867,7 +867,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="type">The type associated with the authorization.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetTypeAsync([NotNull] TAuthorization authorization,
+        public virtual ValueTask SetTypeAsync(TAuthorization authorization,
             [CanBeNull] string type, CancellationToken cancellationToken)
         {
             if (authorization == null)
@@ -886,7 +886,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="authorization">The authorization to update.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask UpdateAsync([NotNull] TAuthorization authorization, CancellationToken cancellationToken)
+        public virtual async ValueTask UpdateAsync(TAuthorization authorization, CancellationToken cancellationToken)
         {
             if (authorization == null)
             {

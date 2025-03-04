@@ -27,9 +27,9 @@ namespace OpenIddict.NHibernate.Stores
                                                                          OpenIddictToken, string>
     {
         public OpenIddictApplicationStore(
-            [NotNull] IMemoryCache cache,
-            [NotNull] IOpenIddictNHibernateContext context,
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
+            IMemoryCache cache,
+            IOpenIddictNHibernateContext context,
+            IOptionsMonitor<OpenIddictNHibernateOptions> options)
             : base(cache, context, options)
         {
         }
@@ -45,9 +45,9 @@ namespace OpenIddict.NHibernate.Stores
         where TKey : IEquatable<TKey>
     {
         public OpenIddictApplicationStore(
-            [NotNull] IMemoryCache cache,
-            [NotNull] IOpenIddictNHibernateContext context,
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
+            IMemoryCache cache,
+            IOpenIddictNHibernateContext context,
+            IOptionsMonitor<OpenIddictNHibernateOptions> options)
             : base(cache, context, options)
         {
         }
@@ -67,9 +67,9 @@ namespace OpenIddict.NHibernate.Stores
         where TKey : IEquatable<TKey>
     {
         public OpenIddictApplicationStore(
-            [NotNull] IMemoryCache cache,
-            [NotNull] IOpenIddictNHibernateContext context,
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options)
+            IMemoryCache cache,
+            IOpenIddictNHibernateContext context,
+            IOptionsMonitor<OpenIddictNHibernateOptions> options)
         {
             this.Cache = cache;
             this.Context = context;
@@ -115,7 +115,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the number of applications that match the specified query.
         /// </returns>
-        public virtual async ValueTask<long> CountAsync<TResult>([NotNull] Func<IQueryable<TApplication>, IQueryable<TResult>> query, CancellationToken cancellationToken)
+        public virtual async ValueTask<long> CountAsync<TResult>(Func<IQueryable<TApplication>, IQueryable<TResult>> query, CancellationToken cancellationToken)
         {
             if (query == null)
             {
@@ -132,7 +132,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="application">The application to create.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask CreateAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual async ValueTask CreateAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -150,7 +150,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="application">The application to delete.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask DeleteAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual async ValueTask DeleteAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -193,7 +193,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the client application corresponding to the identifier.
         /// </returns>
-        public virtual async ValueTask<TApplication> FindByClientIdAsync([NotNull] string identifier, CancellationToken cancellationToken)
+        public virtual async ValueTask<TApplication> FindByClientIdAsync(string identifier, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(identifier))
             {
@@ -216,7 +216,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the client application corresponding to the identifier.
         /// </returns>
-        public virtual async ValueTask<TApplication> FindByIdAsync([NotNull] string identifier, CancellationToken cancellationToken)
+        public virtual async ValueTask<TApplication> FindByIdAsync(string identifier, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(identifier))
             {
@@ -233,7 +233,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="address">The post_logout_redirect_uri associated with the applications.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The client applications corresponding to the specified post_logout_redirect_uri.</returns>
-        public virtual IAsyncEnumerable<TApplication> FindByPostLogoutRedirectUriAsync([NotNull] string address, CancellationToken cancellationToken)
+        public virtual IAsyncEnumerable<TApplication> FindByPostLogoutRedirectUriAsync(string address, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(address))
             {
@@ -268,7 +268,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="address">The redirect_uri associated with the applications.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The client applications corresponding to the specified redirect_uri.</returns>
-        public virtual IAsyncEnumerable<TApplication> FindByRedirectUriAsync([NotNull] string address, CancellationToken cancellationToken)
+        public virtual IAsyncEnumerable<TApplication> FindByRedirectUriAsync(string address, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(address))
             {
@@ -310,7 +310,7 @@ namespace OpenIddict.NHibernate.Stores
         /// whose result returns the first element returned when executing the query.
         /// </returns>
         public virtual async ValueTask<TResult> GetAsync<TState, TResult>(
-            [NotNull] Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query,
+            Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query,
             [CanBeNull] TState state, CancellationToken cancellationToken)
         {
             if (query == null)
@@ -331,7 +331,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the client identifier associated with the application.
         /// </returns>
-        public virtual ValueTask<string> GetClientIdAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetClientIdAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -352,7 +352,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the client secret associated with the application.
         /// </returns>
-        public virtual ValueTask<string> GetClientSecretAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetClientSecretAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -371,7 +371,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the client type of the application (by default, "public").
         /// </returns>
-        public virtual ValueTask<string> GetClientTypeAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetClientTypeAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -390,7 +390,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the consent type of the application (by default, "explicit").
         /// </returns>
-        public virtual ValueTask<string> GetConsentTypeAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetConsentTypeAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -409,7 +409,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the display name associated with the application.
         /// </returns>
-        public virtual ValueTask<string> GetDisplayNameAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetDisplayNameAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -428,7 +428,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns the unique identifier associated with the application.
         /// </returns>
-        public virtual ValueTask<string> GetIdAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<string> GetIdAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -447,7 +447,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns all the permissions associated with the application.
         /// </returns>
-        public virtual ValueTask<ImmutableArray<string>> GetPermissionsAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableArray<string>> GetPermissionsAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -482,7 +482,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns all the post_logout_redirect_uri associated with the application.
         /// </returns>
-        public virtual ValueTask<ImmutableArray<string>> GetPostLogoutRedirectUrisAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableArray<string>> GetPostLogoutRedirectUrisAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -517,7 +517,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns all the additional properties associated with the application.
         /// </returns>
-        public virtual ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -552,7 +552,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns all the redirect_uri associated with the application.
         /// </returns>
-        public virtual ValueTask<ImmutableArray<string>> GetRedirectUrisAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableArray<string>> GetRedirectUrisAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -587,7 +587,7 @@ namespace OpenIddict.NHibernate.Stores
         /// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
         /// whose result returns all the requirements associated with the application.
         /// </returns>
-        public virtual ValueTask<ImmutableArray<string>> GetRequirementsAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual ValueTask<ImmutableArray<string>> GetRequirementsAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -680,7 +680,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>All the elements returned when executing the specified query.</returns>
         public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(
-            [NotNull] Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query,
+            Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query,
             [CanBeNull] TState state, CancellationToken cancellationToken)
         {
             if (query == null)
@@ -708,7 +708,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="identifier">The client identifier associated with the application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetClientIdAsync([NotNull] TApplication application,
+        public virtual ValueTask SetClientIdAsync(TApplication application,
             [CanBeNull] string identifier, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -730,7 +730,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="secret">The client secret associated with the application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetClientSecretAsync([NotNull] TApplication application,
+        public virtual ValueTask SetClientSecretAsync(TApplication application,
             [CanBeNull] string secret, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -750,7 +750,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="type">The client type associated with the application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetClientTypeAsync([NotNull] TApplication application,
+        public virtual ValueTask SetClientTypeAsync(TApplication application,
             [CanBeNull] string type, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -770,7 +770,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="type">The consent type associated with the application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetConsentTypeAsync([NotNull] TApplication application,
+        public virtual ValueTask SetConsentTypeAsync(TApplication application,
             [CanBeNull] string type, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -790,7 +790,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="name">The display name associated with the application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetDisplayNameAsync([NotNull] TApplication application,
+        public virtual ValueTask SetDisplayNameAsync(TApplication application,
             [CanBeNull] string name, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -810,7 +810,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="permissions">The permissions associated with the application </param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetPermissionsAsync([NotNull] TApplication application, ImmutableArray<string> permissions, CancellationToken cancellationToken)
+        public virtual ValueTask SetPermissionsAsync(TApplication application, ImmutableArray<string> permissions, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -840,7 +840,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="addresses">The logout callback addresses associated with the application </param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetPostLogoutRedirectUrisAsync([NotNull] TApplication application,
+        public virtual ValueTask SetPostLogoutRedirectUrisAsync(TApplication application,
             ImmutableArray<string> addresses, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -871,7 +871,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="properties">The additional properties associated with the application.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetPropertiesAsync([NotNull] TApplication application,
+        public virtual ValueTask SetPropertiesAsync(TApplication application,
             [CanBeNull] ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -902,7 +902,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="addresses">The callback addresses associated with the application </param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetRedirectUrisAsync([NotNull] TApplication application,
+        public virtual ValueTask SetRedirectUrisAsync(TApplication application,
             ImmutableArray<string> addresses, CancellationToken cancellationToken)
         {
             if (application == null)
@@ -933,7 +933,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="requirements">The requirements associated with the application </param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual ValueTask SetRequirementsAsync([NotNull] TApplication application, ImmutableArray<string> requirements, CancellationToken cancellationToken)
+        public virtual ValueTask SetRequirementsAsync(TApplication application, ImmutableArray<string> requirements, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -962,7 +962,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="application">The application to update.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-        public virtual async ValueTask UpdateAsync([NotNull] TApplication application, CancellationToken cancellationToken)
+        public virtual async ValueTask UpdateAsync(TApplication application, CancellationToken cancellationToken)
         {
             if (application == null)
             {

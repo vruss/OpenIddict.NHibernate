@@ -18,8 +18,8 @@ namespace OpenIddict.NHibernate.Resolvers
         private readonly IServiceProvider _provider;
 
         public OpenIddictScopeStoreResolver(
-            [NotNull] TypeResolutionCache cache,
-            [NotNull] IServiceProvider provider)
+            TypeResolutionCache cache,
+            IServiceProvider provider)
         {
             this._cache = cache;
             this._provider = provider;

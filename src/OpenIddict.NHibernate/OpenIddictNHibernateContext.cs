@@ -19,8 +19,8 @@ namespace OpenIddict.NHibernate
         private ISession _session;
 
         public OpenIddictNHibernateContext(
-            [NotNull] IOptionsMonitor<OpenIddictNHibernateOptions> options,
-            [NotNull] IServiceProvider provider)
+            IOptionsMonitor<OpenIddictNHibernateOptions> options,
+            IServiceProvider provider)
         {
             _options = options;
             _provider = provider;

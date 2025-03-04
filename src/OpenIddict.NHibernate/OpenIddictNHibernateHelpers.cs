@@ -22,7 +22,7 @@ namespace OpenIddict.NHibernate
         /// </summary>
         /// <param name="configuration">The NHibernate configuration builder.</param>
         /// <returns>The <see cref="Configuration"/>.</returns>
-        public static Configuration UseOpenIddict([NotNull] this Configuration configuration)
+        public static Configuration UseOpenIddict(this Configuration configuration)
             => configuration.UseOpenIddict<OpenIddictApplication,
                                            OpenIddictAuthorization,
                                            OpenIddictScope,
@@ -34,7 +34,7 @@ namespace OpenIddict.NHibernate
         /// </summary>
         /// <param name="configuration">The NHibernate configuration builder.</param>
         /// <returns>The <see cref="Configuration"/>.</returns>
-        public static Configuration UseOpenIddict<TKey>([NotNull] this Configuration configuration)
+        public static Configuration UseOpenIddict<TKey>(this Configuration configuration)
             where TKey : IEquatable<TKey>
             => configuration.UseOpenIddict<OpenIddictApplication<TKey>,
                                            OpenIddictAuthorization<TKey>,
@@ -47,7 +47,7 @@ namespace OpenIddict.NHibernate
         /// </summary>
         /// <param name="configuration">The NHibernate configuration builder.</param>
         /// <returns>The <see cref="Configuration"/>.</returns>
-        public static Configuration UseOpenIddict<TApplication, TAuthorization, TScope, TToken, TKey>([NotNull] this Configuration configuration)
+        public static Configuration UseOpenIddict<TApplication, TAuthorization, TScope, TToken, TKey>(this Configuration configuration)
             where TApplication : OpenIddictApplication<TKey, TAuthorization, TToken>
             where TAuthorization : OpenIddictAuthorization<TKey, TApplication, TToken>
             where TScope : OpenIddictScope<TKey>
@@ -77,7 +77,7 @@ namespace OpenIddict.NHibernate
         /// <param name="source">The query source.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>The non-streamed async enumeration containing the results.</returns>
-        internal static IAsyncEnumerable<T> AsAsyncEnumerable<T>([NotNull] this IQueryable<T> source, CancellationToken cancellationToken)
+        internal static IAsyncEnumerable<T> AsAsyncEnumerable<T>(this IQueryable<T> source, CancellationToken cancellationToken)
         {
             if (source == null)
             {
