@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -10,7 +11,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NHibernate;
@@ -97,6 +97,7 @@ namespace OpenIddict.NHibernate.Stores
 		public virtual async ValueTask<long> CountAsync(CancellationToken cancellationToken)
 		{
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+
 			return await session
 				.Query<TScope>()
 				.LongCountAsync(cancellationToken);
@@ -117,6 +118,7 @@ namespace OpenIddict.NHibernate.Stores
 			ArgumentNullException.ThrowIfNull(nameof(query));
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+
 			return await query
 				.Invoke(session.Query<TScope>())
 				.LongCountAsync(cancellationToken);
@@ -133,6 +135,7 @@ namespace OpenIddict.NHibernate.Stores
 			ArgumentNullException.ThrowIfNull(nameof(scope));
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+
 			await session.SaveAsync(scope, cancellationToken);
 			await session.FlushAsync(cancellationToken);
 		}
@@ -182,7 +185,9 @@ namespace OpenIddict.NHibernate.Stores
 			ArgumentException.ThrowIfNullOrEmpty(identifier);
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			return await session.GetAsync<TScope>(this.ConvertIdentifierFromString(identifier), cancellationToken);
+
+			return await session
+				.GetAsync<TScope>(this.ConvertIdentifierFromString(identifier), cancellationToken);
 		}
 
 		/// <summary>
@@ -244,10 +249,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <returns>The scopes associated with the specified resource.</returns>
 		public virtual IAsyncEnumerable<TScope> FindByResourceAsync(string resource, CancellationToken cancellationToken)
 		{
-			if (string.IsNullOrEmpty(resource))
-			{
-				throw new ArgumentException("The resource cannot be null or empty.", nameof(resource));
-			}
+			ArgumentException.ThrowIfNullOrEmpty(resource);
 
 			return ExecuteAsync(cancellationToken);
 
@@ -260,11 +262,19 @@ namespace OpenIddict.NHibernate.Stores
 				// are retrieved, a second pass is made to ensure only valid elements are returned.
 				// Implementers that use this method in a hot path may want to override this method
 				// to use SQL Server 2016 functions like JSON_VALUE to make the query more efficient.
-				await foreach (var scope in session.Query<TScope>()
+
+				var scopes = session.Query<TScope>()
 					.Where(scope => scope.Resources.Contains(resource))
-					.AsAsyncEnumerable(ct)
-					.(async scope => (await this.GetResourcesAsync(scope, ct)).Contains(resource, StringComparer.Ordinal)))
+					.AsAsyncEnumerable(ct);
+
+				await foreach (var scope in scopes)
 				{
+					var resources = await this.GetResourcesAsync(scope, cancellationToken);
+					if (resources.Contains(resource, StringComparer.Ordinal))
+					{
+						yield return scope;
+					}
+
 					yield return scope;
 				}
 			}
@@ -282,19 +292,18 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the first element returned when executing the query.
 		/// </returns>
-		public virtual async ValueTask<TResult> GetAsync<TState, TResult>(
+		public virtual async ValueTask<TResult?> GetAsync<TState, TResult>(
 			Func<IQueryable<TScope>, TState, IQueryable<TResult>> query
-			, [CanBeNull] TState state
+			, TState state
 			, CancellationToken cancellationToken
 		)
 		{
-			if (query == null)
-			{
-				throw new ArgumentNullException(nameof(query));
-			}
+			ArgumentNullException.ThrowIfNull(query);
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			return await query(session.Query<TScope>(), state)
+
+			return await query
+				.Invoke(session.Query<TScope>(), state)
 				.FirstOrDefaultAsync(cancellationToken);
 		}
 
@@ -307,33 +316,53 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the description associated with the specified scope.
 		/// </returns>
-		public virtual ValueTask<string> GetDescriptionAsync(TScope scope, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetDescriptionAsync(TScope scope, CancellationToken cancellationToken)
 		{
 			if (scope == null)
 			{
 				throw new ArgumentNullException(nameof(scope));
 			}
 
-			return new ValueTask<string>(scope.Description);
+			return new ValueTask<string?>(scope.Description);
 		}
 
 		public ValueTask<ImmutableDictionary<CultureInfo, string>> GetDescriptionsAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			if (scope == null)
+			ArgumentNullException.ThrowIfNull(scope);
+
+			if (string.IsNullOrEmpty(scope.Descriptions))
 			{
-				throw new ArgumentNullException(nameof(scope));
+				return new ValueTask<ImmutableDictionary<CultureInfo, string>>(ImmutableDictionary.Create<CultureInfo, string>());
 			}
 
-			if (scope.Description is not { Count: > 0 })
-			{
-				return new(ImmutableDictionary.Create<CultureInfo, string>());
-			}
+			// Note: parsing the stringified descriptions is an expensive operation.
+			// To mitigate that, the resulting object is stored in the memory cache.
+			var key = string.Concat("CD72F66F-E36C-454A-AEA6-DADBC25C61A9", "\x1e", scope.Descriptions);
+			var descriptions = this.Cache.GetOrCreate(key
+				, entry =>
+				{
+					entry.SetPriority(CacheItemPriority.High)
+						.SetSlidingExpiration(TimeSpan.FromMinutes(1));
 
-			return new(scope.Descriptions.ToImmutableDictionary(
-					pair => CultureInfo.GetCultureInfo(pair.Key)
-					, pair => pair.Value
-				)
-			);
+					using var document = JsonDocument.Parse(scope.Descriptions);
+					var builder = ImmutableDictionary.CreateBuilder<CultureInfo, string>();
+
+					foreach (var property in document.RootElement.EnumerateObject())
+					{
+						var value = property.Value.GetString();
+						if (string.IsNullOrEmpty(value))
+						{
+							continue;
+						}
+
+						builder[CultureInfo.GetCultureInfo(property.Name)] = value;
+					}
+
+					return builder.ToImmutable();
+				}
+			)!;
+
+			return new ValueTask<ImmutableDictionary<CultureInfo, string>>(descriptions);
 		}
 
 		/// <summary>
@@ -345,19 +374,53 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the display name associated with the scope.
 		/// </returns>
-		public virtual ValueTask<string> GetDisplayNameAsync(TScope scope, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetDisplayNameAsync(TScope scope, CancellationToken cancellationToken)
 		{
 			if (scope == null)
 			{
 				throw new ArgumentNullException(nameof(scope));
 			}
 
-			return new ValueTask<string>(scope.DisplayName);
+			return new ValueTask<string?>(scope.DisplayName);
 		}
 
 		public ValueTask<ImmutableDictionary<CultureInfo, string>> GetDisplayNamesAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			ArgumentNullException.ThrowIfNull(scope);
+
+			if (string.IsNullOrEmpty(scope.DisplayNames))
+			{
+				return new ValueTask<ImmutableDictionary<CultureInfo, string>>(ImmutableDictionary.Create<CultureInfo, string>());
+			}
+
+			// Note: parsing the stringified display names is an expensive operation.
+			// To mitigate that, the resulting object is stored in the memory cache.
+			var key = string.Concat("400DB81F-933E-4A06-806B-B2023AB61B3A", "\x1e", scope.DisplayNames);
+			var names = this.Cache.GetOrCreate(key
+				, entry =>
+				{
+					entry.SetPriority(CacheItemPriority.High)
+						.SetSlidingExpiration(TimeSpan.FromMinutes(1));
+
+					using var document = JsonDocument.Parse(scope.DisplayNames);
+					var builder = ImmutableDictionary.CreateBuilder<CultureInfo, string>();
+
+					foreach (var property in document.RootElement.EnumerateObject())
+					{
+						var value = property.Value.GetString();
+						if (string.IsNullOrEmpty(value))
+						{
+							continue;
+						}
+
+						builder[CultureInfo.GetCultureInfo(property.Name)] = value;
+					}
+
+					return builder.ToImmutable();
+				}
+			)!;
+
+			return new ValueTask<ImmutableDictionary<CultureInfo, string>>(names);
 		}
 
 		/// <summary>
@@ -369,14 +432,11 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the unique identifier associated with the scope.
 		/// </returns>
-		public virtual ValueTask<string> GetIdAsync(TScope scope, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetIdAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
-			return new ValueTask<string>(this.ConvertIdentifierToString(scope.Id));
+			return new ValueTask<string?>(this.ConvertIdentifierToString(scope.Id));
 		}
 
 		/// <summary>
@@ -388,14 +448,11 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the name associated with the specified scope.
 		/// </returns>
-		public virtual ValueTask<string> GetNameAsync(TScope scope, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetNameAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
-			return new ValueTask<string>(scope.Name);
+			return new ValueTask<string?>(scope.Name);
 		}
 
 		/// <summary>
@@ -409,10 +466,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// </returns>
 		public virtual ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
 			if (string.IsNullOrEmpty(scope.Properties))
 			{
@@ -421,16 +475,24 @@ namespace OpenIddict.NHibernate.Stores
 
 			// Note: parsing the stringified properties is an expensive operation.
 			// To mitigate that, the resulting object is stored in the memory cache.
-			var key = string.Concat("78d8dfdd-3870-442e-b62e-dc9bf6eaeff7", "\x1e", scope.Properties);
+			var key = string.Concat("B281DF4C-C641-4E0B-89F7-6A07AFACE307", "\x1e", scope.Properties);
 			var properties = this.Cache.GetOrCreate(key
 				, entry =>
 				{
 					entry.SetPriority(CacheItemPriority.High)
 						.SetSlidingExpiration(TimeSpan.FromMinutes(1));
 
-					return JsonSerializer.Deserialize<ImmutableDictionary<string, JsonElement>>(scope.Properties);
+					using var document = JsonDocument.Parse(scope.Properties);
+					var builder = ImmutableDictionary.CreateBuilder<string, JsonElement>();
+
+					foreach (var property in document.RootElement.EnumerateObject())
+					{
+						builder[property.Name] = property.Value.Clone();
+					}
+
+					return builder.ToImmutable();
 				}
-			);
+			)!;
 
 			return new ValueTask<ImmutableDictionary<string, JsonElement>>(properties);
 		}
@@ -446,10 +508,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// </returns>
 		public virtual ValueTask<ImmutableArray<string>> GetResourcesAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
 			if (string.IsNullOrEmpty(scope.Resources))
 			{
@@ -458,14 +517,28 @@ namespace OpenIddict.NHibernate.Stores
 
 			// Note: parsing the stringified resources is an expensive operation.
 			// To mitigate that, the resulting array is stored in the memory cache.
-			var key = string.Concat("b6148250-aede-4fb9-a621-07c9bcf238c3", "\x1e", scope.Resources);
+			var key = string.Concat("F0C5DEF7-3917-48E1-A5DE-4BA240A76F1B", "\x1e", scope.Resources);
 			var resources = this.Cache.GetOrCreate(key
 				, entry =>
 				{
 					entry.SetPriority(CacheItemPriority.High)
 						.SetSlidingExpiration(TimeSpan.FromMinutes(1));
 
-					return JsonSerializer.Deserialize<ImmutableArray<string>>(scope.Resources);
+					using var document = JsonDocument.Parse(scope.Resources);
+					var builder = ImmutableArray.CreateBuilder<string>(document.RootElement.GetArrayLength());
+
+					foreach (var element in document.RootElement.EnumerateArray())
+					{
+						var value = element.GetString();
+						if (string.IsNullOrEmpty(value))
+						{
+							continue;
+						}
+
+						builder.Add(value);
+					}
+
+					return builder.ToImmutable();
 				}
 			);
 
@@ -489,12 +562,13 @@ namespace OpenIddict.NHibernate.Stores
 
 			catch (MemberAccessException exception)
 			{
+				var stringBuilder = new StringBuilder();
+				stringBuilder.AppendLine("An error occurred while trying to create a new scope instance.");
+				stringBuilder.Append("Make sure that the scope entity is not abstract and has a public parameterless constructor ");
+				stringBuilder.Append("or create a custom scope store that overrides 'InstantiateAsync()' to use a custom factory.");
+
 				return new ValueTask<TScope>(Task.FromException<TScope>(
-						new InvalidOperationException(new StringBuilder()
-								.AppendLine("An error occurred while trying to create a new scope instance.")
-								.Append("Make sure that the scope entity is not abstract and has a public parameterless constructor ")
-								.Append("or create a custom scope store that overrides 'InstantiateAsync()' to use a custom factory.")
-								.ToString()
+						new InvalidOperationException(stringBuilder.ToString()
 							, exception
 						)
 					)
@@ -509,13 +583,13 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="offset">The number of results to skip.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>All the elements returned when executing the specified query.</returns>
-		public virtual async IAsyncEnumerable<TScope> ListAsync(
-			[CanBeNull] int? count
-			, [CanBeNull] int? offset
+		public virtual async IAsyncEnumerable<TScope> ListAsync(int? count
+			, int? offset
 			, [EnumeratorCancellation] CancellationToken cancellationToken
 		)
 		{
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+
 			var query = session.Query<TScope>()
 				.OrderBy(scope => scope.Id)
 				.AsQueryable();
@@ -545,25 +619,21 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="state">The optional state.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>All the elements returned when executing the specified query.</returns>
-		public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(
-			Func<IQueryable<TScope>, TState, IQueryable<TResult>> query
-			, [CanBeNull] TState state
+		public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(Func<IQueryable<TScope>, TState, IQueryable<TResult>> query
+			, TState state
 			, CancellationToken cancellationToken
 		)
 		{
-			if (query == null)
-			{
-				throw new ArgumentNullException(nameof(query));
-			}
+			ArgumentNullException.ThrowIfNull(query);
 
 			return ExecuteAsync(cancellationToken);
 
-			async IAsyncEnumerable<TResult> ExecuteAsync(CancellationToken cancellationToken)
+			async IAsyncEnumerable<TResult> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
+				var session = await this.Context.GetSessionAsync(ct);
 
 				await foreach (var element in query(session.Query<TScope>(), state)
-					.AsAsyncEnumerable(cancellationToken))
+					.AsAsyncEnumerable(ct))
 				{
 					yield return element;
 				}
@@ -577,12 +647,9 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="description">The description associated with the authorization.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetDescriptionAsync(TScope scope, [CanBeNull] string description, CancellationToken cancellationToken)
+		public virtual ValueTask SetDescriptionAsync(TScope scope, string? description, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
 			scope.Description = description;
 
@@ -591,7 +658,36 @@ namespace OpenIddict.NHibernate.Stores
 
 		public ValueTask SetDescriptionsAsync(TScope scope, ImmutableDictionary<CultureInfo, string> descriptions, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			ArgumentNullException.ThrowIfNull(scope);
+
+			if (descriptions is not { Count: > 0 })
+			{
+				scope.Descriptions = null;
+
+				return default;
+			}
+
+			using var stream = new MemoryStream();
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+			{
+				Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+				Indented = false,
+			});
+
+			writer.WriteStartObject();
+
+			foreach (var description in descriptions)
+			{
+				writer.WritePropertyName(description.Key.Name);
+				writer.WriteStringValue(description.Value);
+			}
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			scope.Descriptions = Encoding.UTF8.GetString(stream.ToArray());
+
+			return default;
 		}
 
 		/// <summary>
@@ -601,12 +697,9 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="name">The display name associated with the scope.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetDisplayNameAsync(TScope scope, [CanBeNull] string name, CancellationToken cancellationToken)
+		public virtual ValueTask SetDisplayNameAsync(TScope scope, string? name, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
 			scope.DisplayName = name;
 
@@ -615,7 +708,36 @@ namespace OpenIddict.NHibernate.Stores
 
 		public ValueTask SetDisplayNamesAsync(TScope scope, ImmutableDictionary<CultureInfo, string> names, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			ArgumentNullException.ThrowIfNull(scope);
+
+			if (names is not { Count: > 0 })
+			{
+				scope.DisplayNames = null;
+
+				return default;
+			}
+
+			using var stream = new MemoryStream();
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+			{
+				Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+				Indented = false,
+			});
+
+			writer.WriteStartObject();
+
+			foreach (var name in names)
+			{
+				writer.WritePropertyName(name.Key.Name);
+				writer.WriteStringValue(name.Value);
+			}
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			scope.DisplayNames = Encoding.UTF8.GetString(stream.ToArray());
+
+			return default;
 		}
 
 		/// <summary>
@@ -625,7 +747,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="name">The name associated with the authorization.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetNameAsync(TScope scope, [CanBeNull] string name, CancellationToken cancellationToken)
+		public virtual ValueTask SetNameAsync(TScope scope, string? name, CancellationToken cancellationToken)
 		{
 			if (scope == null)
 			{
@@ -644,27 +766,36 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="properties">The additional properties associated with the scope.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetPropertiesAsync(TScope scope, [CanBeNull] ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
+		public virtual ValueTask SetPropertiesAsync(TScope scope, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
-			if (properties == null || properties.IsEmpty)
+			if (properties is not { Count: > 0 })
 			{
 				scope.Properties = null;
 
 				return default;
 			}
 
-			scope.Properties = JsonSerializer.Serialize(properties
-				, new JsonSerializerOptions
-				{
-					Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-					, WriteIndented = false
-				}
-			);
+			using var stream = new MemoryStream();
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+			{
+				Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+				Indented = false,
+			});
+
+			writer.WriteStartObject();
+
+			foreach (var property in properties)
+			{
+				writer.WritePropertyName(property.Key);
+				property.Value.WriteTo(writer);
+			}
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			scope.Properties = Encoding.UTF8.GetString(stream.ToArray());
 
 			return default;
 		}
@@ -678,10 +809,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
 		public virtual ValueTask SetResourcesAsync(TScope scope, ImmutableArray<string> resources, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
 			if (resources.IsDefaultOrEmpty)
 			{
@@ -690,13 +818,24 @@ namespace OpenIddict.NHibernate.Stores
 				return default;
 			}
 
-			scope.Resources = JsonSerializer.Serialize(resources
-				, new JsonSerializerOptions
-				{
-					Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-					, WriteIndented = false
-				}
-			);
+			using var stream = new MemoryStream();
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+			{
+				Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+				Indented = false,
+			});
+
+			writer.WriteStartArray();
+
+			foreach (var resource in resources)
+			{
+				writer.WriteStringValue(resource);
+			}
+
+			writer.WriteEndArray();
+			writer.Flush();
+
+			scope.Resources = Encoding.UTF8.GetString(stream.ToArray());
 
 			return default;
 		}
@@ -709,12 +848,13 @@ namespace OpenIddict.NHibernate.Stores
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
 		public virtual async ValueTask UpdateAsync(TScope scope, CancellationToken cancellationToken)
 		{
-			if (scope == null)
-			{
-				throw new ArgumentNullException(nameof(scope));
-			}
+			ArgumentNullException.ThrowIfNull(scope);
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+
+			// Generate a new concurrency token and attach it
+			// to the scope before persisting the changes.
+			scope.ConcurrencyToken = Guid.NewGuid().ToString();
 
 			try
 			{
@@ -724,10 +864,12 @@ namespace OpenIddict.NHibernate.Stores
 
 			catch (StaleObjectStateException exception)
 			{
-				throw new OpenIddictExceptions.ConcurrencyException(new StringBuilder()
-						.AppendLine("The scope was concurrently updated and cannot be persisted in its current state.")
-						.Append("Reload the scope from the database and retry the operation.")
-						.ToString()
+				var message = new StringBuilder()
+					.AppendLine("The scope was concurrently updated and cannot be persisted in its current state.")
+					.Append("Reload the scope from the database and retry the operation.")
+					.ToString();
+
+				throw new OpenIddictExceptions.ConcurrencyException(message
 					, exception
 				);
 			}
@@ -738,14 +880,15 @@ namespace OpenIddict.NHibernate.Stores
 		/// </summary>
 		/// <param name="identifier">The identifier to convert.</param>
 		/// <returns>An instance of <typeparamref name="TKey"/> representing the provided identifier.</returns>
-		public virtual TKey ConvertIdentifierFromString([CanBeNull] string identifier)
+		public virtual TKey? ConvertIdentifierFromString(string identifier)
 		{
 			if (string.IsNullOrEmpty(identifier))
 			{
 				return default;
 			}
 
-			return (TKey)TypeDescriptor.GetConverter(typeof(TKey))
+			return (TKey?)TypeDescriptor
+				.GetConverter(typeof(TKey))
 				.ConvertFromInvariantString(identifier);
 		}
 
@@ -754,14 +897,15 @@ namespace OpenIddict.NHibernate.Stores
 		/// </summary>
 		/// <param name="identifier">The identifier to convert.</param>
 		/// <returns>A <see cref="string"/> representation of the provided identifier.</returns>
-		public virtual string ConvertIdentifierToString([CanBeNull] TKey identifier)
+		public virtual string? ConvertIdentifierToString(TKey? identifier)
 		{
 			if (Equals(identifier, default(TKey)))
 			{
 				return null;
 			}
 
-			return TypeDescriptor.GetConverter(typeof(TKey))
+			return TypeDescriptor
+				.GetConverter(typeof(TKey))
 				.ConvertToInvariantString(identifier);
 		}
 	}

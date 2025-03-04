@@ -22,14 +22,14 @@ namespace OpenIddict.NHibernate
             IOptionsMonitor<OpenIddictNHibernateOptions> options,
             IServiceProvider provider)
         {
-            _options = options;
-            _provider = provider;
+			this._options = options;
+			this._provider = provider;
         }
 
         /// <summary>
         /// Disposes the session held by this instance, if applicable.
         /// </summary>
-        public void Dispose() => _session?.Dispose();
+        public void Dispose() => this._session?.Dispose();
 
         /// <summary>
         /// Gets the <see cref="ISession"/>.
@@ -47,9 +47,9 @@ namespace OpenIddict.NHibernate
         /// </remarks>
         public ValueTask<ISession> GetSessionAsync(CancellationToken cancellationToken)
         {
-            if (_session != null)
+            if (this._session != null)
             {
-                return new ValueTask<ISession>(_session);
+                return new ValueTask<ISession>(this._session);
             }
 
             if (cancellationToken.IsCancellationRequested)
@@ -57,7 +57,7 @@ namespace OpenIddict.NHibernate
                 return new ValueTask<ISession>(Task.FromCanceled<ISession>(cancellationToken));
             }
 
-            var options = _options.CurrentValue;
+            var options = this._options.CurrentValue;
             if (options == null)
             {
                 throw new InvalidOperationException("The OpenIddict NHibernate options cannot be retrieved.");
@@ -73,7 +73,7 @@ namespace OpenIddict.NHibernate
             var factory = options.SessionFactory;
             if (factory == null)
             {
-                var session = _provider.GetService<ISession>();
+                var session = this._provider.GetService<ISession>();
                 if (session != null)
                 {
                     // If the flush mode is already set to manual, avoid creating a sub-session.
@@ -81,7 +81,7 @@ namespace OpenIddict.NHibernate
                     // the original session (except the flush mode, explicitly set to manual).
                     if (session.FlushMode != FlushMode.Manual)
                     {
-                        session = _session = session.SessionWithOptions()
+                        session = this._session = session.SessionWithOptions()
                             .AutoClose()
                             .AutoJoinTransaction()
                             .Connection()
@@ -94,7 +94,7 @@ namespace OpenIddict.NHibernate
                     return new ValueTask<ISession>(session);
                 }
 
-                factory = _provider.GetService<ISessionFactory>();
+                factory = this._provider.GetService<ISessionFactory>();
             }
 
             if (factory == null)
@@ -112,7 +112,7 @@ namespace OpenIddict.NHibernate
                 var session = factory.OpenSession();
                 session.FlushMode = FlushMode.Manual;
 
-                return new ValueTask<ISession>(_session = session);
+                return new ValueTask<ISession>(this._session = session);
             }
         }
     }

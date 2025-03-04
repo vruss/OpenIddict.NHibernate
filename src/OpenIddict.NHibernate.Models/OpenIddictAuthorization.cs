@@ -12,7 +12,7 @@ namespace OpenIddict.NHibernate.Models
         public OpenIddictAuthorization()
         {
             // Generate a new string identifier.
-            Id = Guid.NewGuid().ToString();
+			this.Id = Guid.NewGuid().ToString();
         }
     }
 

@@ -311,7 +311,7 @@ namespace OpenIddict.NHibernate.Stores
         /// </returns>
         public virtual async ValueTask<TResult> GetAsync<TState, TResult>(
             Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query,
-            [CanBeNull] TState state, CancellationToken cancellationToken)
+            TState state, CancellationToken cancellationToken)
         {
             if (query == null)
             {
@@ -647,7 +647,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>All the elements returned when executing the specified query.</returns>
         public virtual async IAsyncEnumerable<TApplication> ListAsync(
-            [CanBeNull] int? count, [CanBeNull] int? offset, [EnumeratorCancellation] CancellationToken cancellationToken)
+            int? count, int? offset, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var session = await this.Context.GetSessionAsync(cancellationToken);
             var query = session.Query<TApplication>()
@@ -681,7 +681,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <returns>All the elements returned when executing the specified query.</returns>
         public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(
             Func<IQueryable<TApplication>, TState, IQueryable<TResult>> query,
-            [CanBeNull] TState state, CancellationToken cancellationToken)
+            TState state, CancellationToken cancellationToken)
         {
             if (query == null)
             {
@@ -709,7 +709,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual ValueTask SetClientIdAsync(TApplication application,
-            [CanBeNull] string identifier, CancellationToken cancellationToken)
+            string identifier, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -731,7 +731,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual ValueTask SetClientSecretAsync(TApplication application,
-            [CanBeNull] string secret, CancellationToken cancellationToken)
+            string secret, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -751,7 +751,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual ValueTask SetClientTypeAsync(TApplication application,
-            [CanBeNull] string type, CancellationToken cancellationToken)
+            string type, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -771,7 +771,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual ValueTask SetConsentTypeAsync(TApplication application,
-            [CanBeNull] string type, CancellationToken cancellationToken)
+            string type, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -791,7 +791,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual ValueTask SetDisplayNameAsync(TApplication application,
-            [CanBeNull] string name, CancellationToken cancellationToken)
+            string name, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -872,7 +872,7 @@ namespace OpenIddict.NHibernate.Stores
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
         /// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
         public virtual ValueTask SetPropertiesAsync(TApplication application,
-            [CanBeNull] ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
+            ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
         {
             if (application == null)
             {
@@ -991,7 +991,7 @@ namespace OpenIddict.NHibernate.Stores
         /// </summary>
         /// <param name="identifier">The identifier to convert.</param>
         /// <returns>An instance of <typeparamref name="TKey"/> representing the provided identifier.</returns>
-        public virtual TKey ConvertIdentifierFromString([CanBeNull] string identifier)
+        public virtual TKey ConvertIdentifierFromString(string identifier)
         {
             if (string.IsNullOrEmpty(identifier))
             {
@@ -1006,7 +1006,7 @@ namespace OpenIddict.NHibernate.Stores
         /// </summary>
         /// <param name="identifier">The identifier to convert.</param>
         /// <returns>A <see cref="string"/> representation of the provided identifier.</returns>
-        public virtual string ConvertIdentifierToString([CanBeNull] TKey identifier)
+        public virtual string ConvertIdentifierToString(TKey identifier)
         {
             if (Equals(identifier, default(TKey)))
             {

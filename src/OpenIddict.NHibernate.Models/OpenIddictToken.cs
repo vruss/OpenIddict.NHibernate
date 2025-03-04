@@ -11,7 +11,7 @@ namespace OpenIddict.NHibernate.Models
         public OpenIddictToken()
         {
             // Generate a new string identifier.
-            Id = Guid.NewGuid().ToString();
+			this.Id = Guid.NewGuid().ToString();
         }
     }
 
