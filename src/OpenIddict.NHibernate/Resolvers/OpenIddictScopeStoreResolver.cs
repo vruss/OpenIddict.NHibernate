@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Text;
-using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
+using OpenIddict.NHibernate.Extensions;
 using OpenIddict.NHibernate.Models;
 using OpenIddict.NHibernate.Stores;
 
@@ -40,8 +40,7 @@ namespace OpenIddict.NHibernate.Resolvers
 				return store;
 			}
 
-			var type = this.cache.GetOrAdd(typeof(TScope)
-				, key =>
+			var type = this.cache.GetOrAdd(typeof(TScope), key =>
 				{
 					var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictScope<>));
 					if (root == null)

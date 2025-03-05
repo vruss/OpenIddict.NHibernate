@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using NHibernate.Cfg;
 using NHibernate.Linq;
@@ -51,10 +52,7 @@ namespace OpenIddict.NHibernate
 			where TToken : OpenIddictToken<TKey, TApplication, TAuthorization>
 			where TKey : IEquatable<TKey>
 		{
-			if (configuration == null)
-			{
-				throw new ArgumentNullException(nameof(configuration));
-			}
+			ArgumentNullException.ThrowIfNull(configuration);
 
 			var mapper = new ModelMapper();
 			mapper.AddMapping<OpenIddictApplicationMapping<TApplication, TAuthorization, TToken, TKey>>();
@@ -76,16 +74,13 @@ namespace OpenIddict.NHibernate
 		/// <returns>The non-streamed async enumeration containing the results.</returns>
 		internal static IAsyncEnumerable<T> AsAsyncEnumerable<T>(this IQueryable<T> source, CancellationToken cancellationToken)
 		{
-			if (source == null)
-			{
-				throw new ArgumentNullException(nameof(source));
-			}
+			ArgumentNullException.ThrowIfNull(source);
 
 			return ExecuteAsync(cancellationToken);
 
-			async IAsyncEnumerable<T> ExecuteAsync(CancellationToken cancellationToken)
+			async IAsyncEnumerable<T> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
-				foreach (var element in await source.ToListAsync(cancellationToken))
+				foreach (var element in await source.ToListAsync(ct))
 				{
 					yield return element;
 				}

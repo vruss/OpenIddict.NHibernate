@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Text;
-using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.NHibernate.Models;

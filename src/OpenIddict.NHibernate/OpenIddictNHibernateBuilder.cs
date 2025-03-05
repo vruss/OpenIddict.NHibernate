@@ -16,7 +16,12 @@ namespace OpenIddict.NHibernate
 		/// Initializes a new instance of <see cref="OpenIddictNHibernateBuilder"/>.
 		/// </summary>
 		/// <param name="services">The services collection.</param>
-		public OpenIddictNHibernateBuilder(IServiceCollection services) => this.Services = services ?? throw new ArgumentNullException(nameof(services));
+		public OpenIddictNHibernateBuilder(IServiceCollection services)
+		{
+			ArgumentNullException.ThrowIfNull(services);
+
+			this.Services = services;
+		}
 
 		/// <summary>
 		/// Gets the services collection.
@@ -32,10 +37,7 @@ namespace OpenIddict.NHibernate
 		/// <returns>The <see cref="OpenIddictNHibernateBuilder"/>.</returns>
 		public OpenIddictNHibernateBuilder Configure(Action<OpenIddictNHibernateOptions> configuration)
 		{
-			if (configuration == null)
-			{
-				throw new ArgumentNullException(nameof(configuration));
-			}
+			ArgumentNullException.ThrowIfNull(configuration);
 
 			this.Services.Configure(configuration);
 
@@ -50,10 +52,7 @@ namespace OpenIddict.NHibernate
 		/// <returns>The <see cref="OpenIddictNHibernateBuilder"/>.</returns>
 		public OpenIddictNHibernateBuilder UseSessionFactory(ISessionFactory factory)
 		{
-			if (factory == null)
-			{
-				throw new ArgumentNullException(nameof(factory));
-			}
+			ArgumentNullException.ThrowIfNull(factory);
 
 			return this.Configure(options => options.SessionFactory = factory);
 		}
