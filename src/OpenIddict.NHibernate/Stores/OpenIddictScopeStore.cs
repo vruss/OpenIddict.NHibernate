@@ -41,8 +41,7 @@ namespace OpenIddict.NHibernate.Stores
 	public class OpenIddictScopeStore<TKey> : OpenIddictScopeStore<OpenIddictScope<TKey>, TKey>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictScopeStore(
-			IMemoryCache cache
+		public OpenIddictScopeStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)
@@ -60,8 +59,7 @@ namespace OpenIddict.NHibernate.Stores
 		where TScope : OpenIddictScope<TKey>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictScopeStore(
-			IMemoryCache cache
+		public OpenIddictScopeStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)

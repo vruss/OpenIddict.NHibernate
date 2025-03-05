@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace OpenIddict.NHibernate.Extensions;
 
-public class OpenIddictHelpers
+internal class OpenIddictHelpers
 {
 	/// <summary>
 	/// Finds the first base type that matches the specified generic type definition.

@@ -28,19 +28,13 @@ namespace OpenIddict.NHibernate.Mappings
 				map.Insert(true);
 			});
 
-			this.Property(scope => scope.Description, map =>
-			{
-				map.Length(10000);
-			});
+			this.Property(scope => scope.Description);
 			this.Property(scope => scope.Descriptions, map =>
 			{
 				map.Length(10000);
 			});
 
-			this.Property(scope => scope.DisplayName, map =>
-			{
-				map.Length(10000);
-			});
+			this.Property(scope => scope.DisplayName);
 			this.Property(scope => scope.DisplayNames, map =>
 			{
 				map.Length(10000);
@@ -49,7 +43,6 @@ namespace OpenIddict.NHibernate.Mappings
 			this.Property(scope => scope.Name, map =>
 			{
 				map.Unique(true);
-				map.Length(10000);
 			});
 
 			this.Property(scope => scope.Properties, map =>

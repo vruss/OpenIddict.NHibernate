@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
+using OpenIddict.NHibernate.Extensions;
 using OpenIddict.NHibernate.Models;
 using OpenIddict.NHibernate.Stores;
 

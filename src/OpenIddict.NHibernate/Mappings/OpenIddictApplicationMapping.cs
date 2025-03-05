@@ -27,22 +27,31 @@ namespace OpenIddict.NHibernate.Mappings
 				map.Generator(Generators.Identity);
 			});
 
-			this.Version(application => application.Version, map =>
+			this.Version(application => application.ConcurrencyToken, map =>
 			{
 				map.Insert(true);
 			});
 
+			this.Property(application => application.ClientSecret);
+			this.Property(application => application.ClientType);
 			this.Property(application => application.ClientId, map =>
 			{
-				map.NotNullable(true);
 				map.Unique(true);
 			});
 
-			this.Property(application => application.ClientSecret);
-
+			this.Property(application => application.ApplicationType);
 			this.Property(application => application.ConsentType);
 
 			this.Property(application => application.DisplayName);
+			this.Property(scope => scope.DisplayNames, map =>
+			{
+				map.Length(10000);
+			});
+
+			this.Property(scope => scope.JsonWebKeySet, map =>
+			{
+				map.Length(10000);
+			});
 
 			this.Property(application => application.Permissions, map =>
 			{
@@ -64,9 +73,14 @@ namespace OpenIddict.NHibernate.Mappings
 				map.Length(10000);
 			});
 
-			this.Property(application => application.Type, map =>
+			this.Property(application => application.Requirements, map =>
 			{
-				map.NotNullable(true);
+				map.Length(10000);
+			});
+
+			this.Property(application => application.Settings, map =>
+			{
+				map.Length(10000);
 			});
 
 			this.Bag(application => application.Authorizations, map =>
