@@ -1,0 +1,49 @@
+name: 'CI/CD'
+
+on:
+  - push
+  - workflow_dispatch
+
+jobs:
+  build:
+    name: 'CI: Restore, Build & Test'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      
+  publish:
+    name: 'CD: Pack & Publish'
+    needs: build
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET Core SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+
+      - name: Pack
+        run: |
+          dotnet pack
+
+      - name: Publish
+        run: |
+          dotnet nuget push **\*.nupkg \
+            --source 'https://api.nuget.org/v3/index.json' \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --skip-duplicate
