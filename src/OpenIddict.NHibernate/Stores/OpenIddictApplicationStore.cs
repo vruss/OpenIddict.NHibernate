@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -154,12 +155,14 @@ namespace OpenIddict.NHibernate.Stores
 			ArgumentNullException.ThrowIfNull(application);
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+			var transaction = session.BeginTransaction(IsolationLevel.Serializable);
 
 			try
 			{
 				// Delete all the tokens associated with the application.
 				await session
 					.Query<TAuthorization>()
+					.Fetch(authorization => authorization.Application)
 					.Where(authorization => authorization.Application.Id.Equals(application.Id))
 					.DeleteAsync(cancellationToken);
 
@@ -171,7 +174,7 @@ namespace OpenIddict.NHibernate.Stores
 					.DeleteAsync(cancellationToken);
 
 				await session.DeleteAsync(application, cancellationToken);
-				await session.FlushAsync(cancellationToken);
+				await transaction.CommitAsync(cancellationToken);
 			}
 
 			catch (StaleObjectStateException exception)

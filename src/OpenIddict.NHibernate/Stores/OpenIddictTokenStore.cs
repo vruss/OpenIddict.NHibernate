@@ -1116,14 +1116,15 @@ namespace OpenIddict.NHibernate.Stores
 		/// </summary>
 		/// <param name="identifier">The identifier to convert.</param>
 		/// <returns>An instance of <typeparamref name="TKey"/> representing the provided identifier.</returns>
-		public virtual TKey ConvertIdentifierFromString(string identifier)
+		public virtual TKey? ConvertIdentifierFromString(string? identifier)
 		{
 			if (string.IsNullOrEmpty(identifier))
 			{
 				return default;
 			}
 
-			return (TKey)TypeDescriptor.GetConverter(typeof(TKey))
+			return (TKey?)TypeDescriptor
+				.GetConverter(typeof(TKey))
 				.ConvertFromInvariantString(identifier);
 		}
 
@@ -1132,14 +1133,15 @@ namespace OpenIddict.NHibernate.Stores
 		/// </summary>
 		/// <param name="identifier">The identifier to convert.</param>
 		/// <returns>A <see cref="string"/> representation of the provided identifier.</returns>
-		public virtual string ConvertIdentifierToString(TKey identifier)
+		public virtual string? ConvertIdentifierToString(TKey? identifier)
 		{
 			if (Equals(identifier, default(TKey)))
 			{
 				return null;
 			}
 
-			return TypeDescriptor.GetConverter(typeof(TKey))
+			return TypeDescriptor
+				.GetConverter(typeof(TKey))
 				.ConvertToInvariantString(identifier);
 		}
 	}

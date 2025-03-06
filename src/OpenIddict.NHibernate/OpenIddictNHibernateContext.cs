@@ -15,7 +15,7 @@ namespace OpenIddict.NHibernate
 	{
 		private readonly IOptionsMonitor<OpenIddictNHibernateOptions> options;
 		private readonly IServiceProvider provider;
-		private ISession session;
+		private ISession? session;
 
 		public OpenIddictNHibernateContext(IOptionsMonitor<OpenIddictNHibernateOptions> options
 			, IServiceProvider provider
@@ -56,8 +56,8 @@ namespace OpenIddict.NHibernate
 				return new ValueTask<ISession>(Task.FromCanceled<ISession>(cancellationToken));
 			}
 
-			var options = this.options.CurrentValue;
-			if (options == null)
+			var currentOptions = this.options.CurrentValue;
+			if (currentOptions == null)
 			{
 				throw new InvalidOperationException("The OpenIddict NHibernate options cannot be retrieved.");
 			}
@@ -69,18 +69,18 @@ namespace OpenIddict.NHibernate
 			// validated by the core managers and marked as updated by the NHibernate stores.
 			// To ensure this doesn't interfere with OpenIddict, automatic flush is disabled.
 
-			var factory = options.SessionFactory;
+			var factory = currentOptions.SessionFactory;
 			if (factory == null)
 			{
-				var session = this.provider.GetService<ISession>();
-				if (session != null)
+				var providedSession = this.provider.GetService<ISession>();
+				if (providedSession != null)
 				{
 					// If the flush mode is already set to manual, avoid creating a sub-session.
 					// If the session must be derived, all the parameters are inherited from
 					// the original session (except the flush mode, explicitly set to manual).
-					if (session.FlushMode != FlushMode.Manual)
+					if (providedSession.FlushMode != FlushMode.Manual)
 					{
-						session = this.session = session.SessionWithOptions()
+						providedSession = this.session = providedSession.SessionWithOptions()
 							.AutoClose()
 							.AutoJoinTransaction()
 							.Connection()
@@ -90,7 +90,7 @@ namespace OpenIddict.NHibernate
 							.OpenSession();
 					}
 
-					return new ValueTask<ISession>(session);
+					return new ValueTask<ISession>(providedSession);
 				}
 
 				factory = this.provider.GetService<ISessionFactory>();
@@ -107,13 +107,10 @@ namespace OpenIddict.NHibernate
 				);
 			}
 
-			else
-			{
-				var session = factory.OpenSession();
-				session.FlushMode = FlushMode.Manual;
+			var newSession = factory.OpenSession();
+			newSession.FlushMode = FlushMode.Manual;
 
-				return new ValueTask<ISession>(this.session = session);
-			}
+			return new ValueTask<ISession>(this.session = newSession);
 		}
 	}
 }

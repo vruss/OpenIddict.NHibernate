@@ -11,6 +11,6 @@ namespace OpenIddict.NHibernate
 		/// Gets or sets the session factory used by the OpenIddict NHibernate stores.
 		/// If none is explicitly set, the session factory is resolved from the DI container.
 		/// </summary>
-		public ISessionFactory SessionFactory { get; set; }
+		public ISessionFactory? SessionFactory { get; set; }
 	}
 }

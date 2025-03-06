@@ -27,7 +27,7 @@ namespace OpenIddict.NHibernate.Mappings
 				map.Generator(Generators.Identity);
 			});
 
-			this.Version(authorization => authorization.Version, map =>
+			this.Version(authorization => authorization.ConcurrencyToken, map =>
 			{
 				map.Insert(true);
 			});
@@ -42,15 +42,10 @@ namespace OpenIddict.NHibernate.Mappings
 				map.Length(10000);
 			});
 
-			this.Property(authorization => authorization.Status, map =>
-			{
-				map.NotNullable(true);
-			});
-
-			this.Property(authorization => authorization.Type, map =>
-			{
-				map.NotNullable(true);
-			});
+			this.Property(authorization => authorization.Subject);
+			this.Property(authorization => authorization.Status);
+			this.Property(authorization => authorization.Type);
+			this.Property(authorization => authorization.CreationDate);
 
 			this.ManyToOne(authorization => authorization.Application, map =>
 			{
