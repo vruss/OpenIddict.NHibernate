@@ -163,14 +163,16 @@ namespace OpenIddict.NHibernate.Stores
 				await session
 					.Query<TAuthorization>()
 					.Fetch(authorization => authorization.Application)
-					.Where(authorization => authorization.Application.Id.Equals(application.Id))
+					.Where(authorization => authorization.Application != null && authorization.Application.Id!.Equals(application.Id))
 					.DeleteAsync(cancellationToken);
 
 				// Delete all the tokens associated with the application.
 				await session
 					.Query<TToken>()
+					.Fetch(token => token.Application)
+					.Fetch(token => token.Authorization)
 					.Where(token => token.Authorization == null) // Copied from https://github.com/openiddict/openiddict-core/blob/dev/src/OpenIddict.EntityFramework/Stores/OpenIddictEntityFrameworkApplicationStore.cs#L142-L142
-					.Where(token => token.Application.Id.Equals(application.Id))
+					.Where(token => token.Application != null && token.Application.Id!.Equals(application.Id))
 					.DeleteAsync(cancellationToken);
 
 				await session.DeleteAsync(application, cancellationToken);
@@ -251,8 +253,9 @@ namespace OpenIddict.NHibernate.Stores
 				// are retrieved, a second pass is made to ensure only valid elements are returned.
 				// Implementers that use this method in a hot path may want to override this method
 				// to use SQL Server 2016 functions like JSON_VALUE to make the query more efficient.
-				var applications = session.Query<TApplication>()
-					.Where(application => application.PostLogoutRedirectUris.Contains(uri))
+				var applications = session
+					.Query<TApplication>()
+					.Where(application => application.PostLogoutRedirectUris != null && application.PostLogoutRedirectUris.Contains(uri))
 					.AsAsyncEnumerable(ct);
 
 				await foreach (var application in applications)
@@ -287,8 +290,9 @@ namespace OpenIddict.NHibernate.Stores
 				// are retrieved, a second pass is made to ensure only valid elements are returned.
 				// Implementers that use this method in a hot path may want to override this method
 				// to use SQL Server 2016 functions like JSON_VALUE to make the query more efficient.
-				var applications = session.Query<TApplication>()
-					.Where(application => application.RedirectUris.Contains(uri))
+				var applications = session
+					.Query<TApplication>()
+					.Where(application => application.RedirectUris != null && application.RedirectUris.Contains(uri))
 					.AsAsyncEnumerable(ct);
 
 				await foreach (var application in applications)

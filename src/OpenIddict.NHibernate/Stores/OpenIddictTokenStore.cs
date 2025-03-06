@@ -255,7 +255,7 @@ namespace OpenIddict.NHibernate.Stores
 				var tokens = session.Query<TToken>()
 					.Fetch(token => token.Application)
 					.Fetch(token => token.Authorization)
-					.Where(token => token.Application != null && token.Application.Id.Equals(key))
+					.Where(token => token.Application != null && token.Application.Id!.Equals(key))
 					.AsAsyncEnumerable(ct);
 
 				await foreach (var token in tokens)
@@ -288,7 +288,7 @@ namespace OpenIddict.NHibernate.Stores
 				var openIddictTokens = session.Query<TToken>()
 					.Fetch(token => token.Application)
 					.Fetch(token => token.Authorization)
-					.Where(token => token.Authorization != null && token.Authorization.Id.Equals(key))
+					.Where(token => token.Authorization != null && token.Authorization.Id!.Equals(key))
 					.AsAsyncEnumerable(ct);
 
 				await foreach (var token in openIddictTokens)

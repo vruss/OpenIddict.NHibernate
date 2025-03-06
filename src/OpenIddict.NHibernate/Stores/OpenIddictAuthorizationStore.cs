@@ -168,7 +168,8 @@ namespace OpenIddict.NHibernate.Stores
 				// Delete all the tokens associated with the authorization.
 				await session
 					.Query<TToken>()
-					.Where(token => token.Authorization.Id.Equals(authorization.Id))
+					.Fetch(token => token.Authorization)
+					.Where(token => token.Authorization != null && token.Authorization.Id!.Equals(authorization.Id))
 					.DeleteAsync(cancellationToken);
 
 				await session.DeleteAsync(authorization, cancellationToken);
@@ -260,7 +261,7 @@ namespace OpenIddict.NHibernate.Stores
 				var authorizations = session
 					.Query<TAuthorization>()
 					.Fetch(authorization => authorization.Application)
-					.Where(authorization => authorization.Application != null && authorization.Application.Id.Equals(key))
+					.Where(authorization => authorization.Application != null && authorization.Application.Id!.Equals(key))
 					.AsAsyncEnumerable(ct);
 
 				await foreach (var authorization in authorizations)

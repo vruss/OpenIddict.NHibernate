@@ -261,8 +261,9 @@ namespace OpenIddict.NHibernate.Stores
 				// Implementers that use this method in a hot path may want to override this method
 				// to use SQL Server 2016 functions like JSON_VALUE to make the query more efficient.
 
-				var scopes = session.Query<TScope>()
-					.Where(scope => scope.Resources.Contains(resource))
+				var scopes = session
+					.Query<TScope>()
+					.Where(scope => scope.Resources != null && scope.Resources.Contains(resource))
 					.AsAsyncEnumerable(ct);
 
 				await foreach (var scope in scopes)
