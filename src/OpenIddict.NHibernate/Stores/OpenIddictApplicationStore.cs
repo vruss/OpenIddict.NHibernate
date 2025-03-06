@@ -155,7 +155,7 @@ namespace OpenIddict.NHibernate.Stores
 			ArgumentNullException.ThrowIfNull(application);
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			var transaction = session.BeginTransaction(IsolationLevel.Serializable);
+			using var transaction = session.BeginTransaction(IsolationLevel.Serializable);
 
 			try
 			{

@@ -339,7 +339,8 @@ namespace OpenIddict.NHibernate.Stores
 			var descriptions = this.Cache.GetOrCreate(key
 				, entry =>
 				{
-					entry.SetPriority(CacheItemPriority.High)
+					entry
+						.SetPriority(CacheItemPriority.High)
 						.SetSlidingExpiration(TimeSpan.FromMinutes(1));
 
 					using var document = JsonDocument.Parse(scope.Descriptions);

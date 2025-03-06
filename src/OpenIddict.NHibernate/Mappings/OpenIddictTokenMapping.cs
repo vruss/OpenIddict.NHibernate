@@ -27,14 +27,14 @@ namespace OpenIddict.NHibernate.Mappings
 				map.Generator(Generators.Identity);
 			});
 
-			this.Version(token => token.Version, map =>
+			this.Version(token => token.ConcurrencyToken, map =>
 			{
 				map.Insert(true);
 			});
 
 			this.Property(token => token.CreationDate);
-
 			this.Property(token => token.ExpirationDate);
+			this.Property(token => token.RedemptionDate);
 
 			this.Property(token => token.Payload, map =>
 			{
@@ -47,16 +47,9 @@ namespace OpenIddict.NHibernate.Mappings
 			});
 
 			this.Property(token => token.ReferenceId);
-
-			this.Property(token => token.Status, map =>
-			{
-				map.NotNullable(true);
-			});
-
-			this.Property(token => token.Type, map =>
-			{
-				map.NotNullable(true);
-			});
+			this.Property(token => token.Status);
+			this.Property(token => token.Subject);
+			this.Property(token => token.Type);
 
 			this.ManyToOne(token => token.Application, map =>
 			{

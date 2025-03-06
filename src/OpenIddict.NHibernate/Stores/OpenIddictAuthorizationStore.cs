@@ -199,6 +199,8 @@ namespace OpenIddict.NHibernate.Stores
 			var session = await this.Context.GetSessionAsync(cancellationToken);
 			var query = session.Query<TAuthorization>();
 
+			query = query.Fetch(authorization => authorization.Application);
+
 			if (!string.IsNullOrEmpty(subject))
 			{
 				query = query.Where(authorization => authorization.Subject == subject);
@@ -208,7 +210,7 @@ namespace OpenIddict.NHibernate.Stores
 			{
 				var key = this.ConvertIdentifierFromString(client);
 
-				query = query.Where(authorization => authorization.Application!.Id!.Equals(key));
+				query = query.Where(authorization => authorization.Application != null && authorization.Application!.Id!.Equals(key));
 			}
 
 			if (!string.IsNullOrEmpty(status))
@@ -220,8 +222,6 @@ namespace OpenIddict.NHibernate.Stores
 			{
 				query = query.Where(authorization => authorization.Type == type);
 			}
-
-			query = query.Fetch(authorization => authorization.Application);
 
 			await foreach (var authorization in query.AsAsyncEnumerable(cancellationToken))
 			{
@@ -719,6 +719,8 @@ namespace OpenIddict.NHibernate.Stores
 
 			var query = session.Query<TAuthorization>();
 
+			query = query.Fetch(authorization => authorization.Application);
+
 			if (!string.IsNullOrEmpty(subject))
 			{
 				query = query.Where(authorization => authorization.Subject == subject);
@@ -728,7 +730,7 @@ namespace OpenIddict.NHibernate.Stores
 			{
 				var key = this.ConvertIdentifierFromString(client);
 
-				query = query.Where(authorization => authorization.Application!.Id!.Equals(key));
+				query = query.Where(authorization => authorization.Application != null && authorization.Application!.Id!.Equals(key));
 			}
 
 			if (!string.IsNullOrEmpty(status))
@@ -740,8 +742,6 @@ namespace OpenIddict.NHibernate.Stores
 			{
 				query = query.Where(authorization => authorization.Type == type);
 			}
-
-			query = query.Fetch(authorization => authorization.Application);
 
 			List<Exception>? exceptions = null;
 

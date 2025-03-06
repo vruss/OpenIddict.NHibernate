@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -97,7 +99,9 @@ namespace OpenIddict.NHibernate.Stores
 		public virtual async ValueTask<long> CountAsync(CancellationToken cancellationToken)
 		{
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			return await session.Query<TToken>()
+
+			return await session
+				.Query<TToken>()
 				.LongCountAsync(cancellationToken);
 		}
 
@@ -119,7 +123,9 @@ namespace OpenIddict.NHibernate.Stores
 			}
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			return await query(session.Query<TToken>())
+
+			return await query
+				.Invoke(session.Query<TToken>())
 				.LongCountAsync(cancellationToken);
 		}
 
@@ -137,6 +143,7 @@ namespace OpenIddict.NHibernate.Stores
 			}
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
+
 			await session.SaveAsync(token, cancellationToken);
 			await session.FlushAsync(cancellationToken);
 		}
@@ -164,103 +171,14 @@ namespace OpenIddict.NHibernate.Stores
 
 			catch (StaleObjectStateException exception)
 			{
-				throw new OpenIddictExceptions.ConcurrencyException(new StringBuilder()
-						.AppendLine("The token was concurrently updated and cannot be persisted in its current state.")
-						.Append("Reload the token from the database and retry the operation.")
-						.ToString()
+				var message = new StringBuilder()
+					.AppendLine("The token was concurrently updated and cannot be persisted in its current state.")
+					.Append("Reload the token from the database and retry the operation.")
+					.ToString();
+
+				throw new OpenIddictExceptions.ConcurrencyException(message
 					, exception
 				);
-			}
-		}
-
-		/// <summary>
-		/// Retrieves the tokens corresponding to the specified
-		/// subject and associated with the application identifier.
-		/// </summary>
-		/// <param name="subject">The subject associated with the token.</param>
-		/// <param name="client">The client associated with the token.</param>
-		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
-		/// <returns>The tokens corresponding to the subject/client.</returns>
-		public virtual IAsyncEnumerable<TToken> FindAsync(string subject, string client, CancellationToken cancellationToken)
-		{
-			if (string.IsNullOrEmpty(subject))
-			{
-				throw new ArgumentException("The subject cannot be null or empty.", nameof(subject));
-			}
-
-			if (string.IsNullOrEmpty(client))
-			{
-				throw new ArgumentException("The client cannot be null or empty.", nameof(client));
-			}
-
-			return ExecuteAsync(cancellationToken);
-
-			async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
-			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
-				var key = this.ConvertIdentifierFromString(client);
-
-				await foreach (var token in (from token in session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					where token.Application != null &&
-						token.Application.Id.Equals(key) &&
-						token.Subject == subject
-					select token).AsAsyncEnumerable(cancellationToken))
-				{
-					yield return token;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Retrieves the tokens matching the specified parameters.
-		/// </summary>
-		/// <param name="subject">The subject associated with the token.</param>
-		/// <param name="client">The client associated with the token.</param>
-		/// <param name="status">The token status.</param>
-		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
-		/// <returns>The tokens corresponding to the criteria.</returns>
-		public virtual IAsyncEnumerable<TToken> FindAsync(
-			string subject
-			, string client
-			, string status
-			, CancellationToken cancellationToken
-		)
-		{
-			if (string.IsNullOrEmpty(subject))
-			{
-				throw new ArgumentException("The subject cannot be null or empty.", nameof(subject));
-			}
-
-			if (string.IsNullOrEmpty(client))
-			{
-				throw new ArgumentException("The client cannot be null or empty.", nameof(client));
-			}
-
-			if (string.IsNullOrEmpty(status))
-			{
-				throw new ArgumentException("The status cannot be null or empty.", nameof(status));
-			}
-
-			return ExecuteAsync(cancellationToken);
-
-			async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
-			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
-				var key = this.ConvertIdentifierFromString(client);
-
-				await foreach (var token in (from token in session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					where token.Application != null &&
-						token.Application.Id.Equals(key) &&
-						token.Subject == subject &&
-						token.Status == status
-					select token).AsAsyncEnumerable(cancellationToken))
-				{
-					yield return token;
-				}
 			}
 		}
 
@@ -273,53 +191,44 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="type">The token type.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>The tokens corresponding to the criteria.</returns>
-		public virtual IAsyncEnumerable<TToken> FindAsync(
-			string subject
-			, string client
-			, string status
-			, string type
-			, CancellationToken cancellationToken
+		public virtual async IAsyncEnumerable<TToken> FindAsync(string? subject
+			, string? client
+			, string? status
+			, string? type
+			, [EnumeratorCancellation] CancellationToken cancellationToken
 		)
 		{
-			if (string.IsNullOrEmpty(subject))
+			using var session = await this.Context.GetSessionAsync(cancellationToken);
+			var query = session.Query<TToken>();
+
+			query = query
+				.Fetch(token => token.Application)
+				.Fetch(token => token.Authorization);
+
+			if (!string.IsNullOrEmpty(subject))
 			{
-				throw new ArgumentException("The subject cannot be null or empty.", nameof(subject));
+				query = query.Where(token => token.Subject == subject);
 			}
 
-			if (string.IsNullOrEmpty(client))
+			if (!string.IsNullOrEmpty(client))
 			{
-				throw new ArgumentException("The client identifier cannot be null or empty.", nameof(client));
-			}
-
-			if (string.IsNullOrEmpty(status))
-			{
-				throw new ArgumentException("The status cannot be null or empty.", nameof(status));
-			}
-
-			if (string.IsNullOrEmpty(type))
-			{
-				throw new ArgumentException("The type cannot be null or empty.", nameof(type));
-			}
-
-			return ExecuteAsync(cancellationToken);
-
-			async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
-			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
 				var key = this.ConvertIdentifierFromString(client);
+				query = query.Where(token => token.Application != null && token.Application.Id!.Equals(key));
+			}
 
-				await foreach (var token in (from token in session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					where token.Application != null &&
-						token.Application.Id.Equals(key) &&
-						token.Subject == subject &&
-						token.Status == status &&
-						token.Type == type
-					select token).AsAsyncEnumerable(cancellationToken))
-				{
-					yield return token;
-				}
+			if (!string.IsNullOrEmpty(status))
+			{
+				query = query.Where(token => token.Status == status);
+			}
+
+			if (!string.IsNullOrEmpty(type))
+			{
+				query = query.Where(token => token.Type == type);
+			}
+
+			await foreach (var token in query.AsAsyncEnumerable(cancellationToken))
+			{
+				yield return token;
 			}
 		}
 
@@ -338,17 +247,18 @@ namespace OpenIddict.NHibernate.Stores
 
 			return ExecuteAsync(cancellationToken);
 
-			async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
+			async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
+				var session = await this.Context.GetSessionAsync(ct);
 				var key = this.ConvertIdentifierFromString(identifier);
 
-				await foreach (var token in (from token in session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					where token.Application != null &&
-						token.Application.Id.Equals(key)
-					select token).AsAsyncEnumerable(cancellationToken))
+				var tokens = session.Query<TToken>()
+					.Fetch(token => token.Application)
+					.Fetch(token => token.Authorization)
+					.Where(token => token.Application != null && token.Application.Id.Equals(key))
+					.AsAsyncEnumerable(ct);
+
+				await foreach (var token in tokens)
 				{
 					yield return token;
 				}
@@ -370,17 +280,18 @@ namespace OpenIddict.NHibernate.Stores
 
 			return ExecuteAsync(cancellationToken);
 
-			async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
+			async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
+				var session = await this.Context.GetSessionAsync(ct);
 				var key = this.ConvertIdentifierFromString(identifier);
 
-				await foreach (var token in (from token in session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					where token.Authorization != null &&
-						token.Authorization.Id.Equals(key)
-					select token).AsAsyncEnumerable(cancellationToken))
+				var openIddictTokens = session.Query<TToken>()
+					.Fetch(token => token.Application)
+					.Fetch(token => token.Authorization)
+					.Where(token => token.Authorization != null && token.Authorization.Id.Equals(key))
+					.AsAsyncEnumerable(ct);
+
+				await foreach (var token in openIddictTokens)
 				{
 					yield return token;
 				}
@@ -396,7 +307,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the token corresponding to the unique identifier.
 		/// </returns>
-		public virtual async ValueTask<TToken> FindByIdAsync(string identifier, CancellationToken cancellationToken)
+		public virtual async ValueTask<TToken?> FindByIdAsync(string identifier, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrEmpty(identifier))
 			{
@@ -404,7 +315,9 @@ namespace OpenIddict.NHibernate.Stores
 			}
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			return await session.GetAsync<TToken>(this.ConvertIdentifierFromString(identifier), cancellationToken);
+
+			return await session
+				.GetAsync<TToken>(this.ConvertIdentifierFromString(identifier), cancellationToken);
 		}
 
 		/// <summary>
@@ -417,7 +330,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the tokens corresponding to the specified reference identifier.
 		/// </returns>
-		public virtual async ValueTask<TToken> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
+		public virtual async ValueTask<TToken?> FindByReferenceIdAsync(string identifier, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrEmpty(identifier))
 			{
@@ -426,11 +339,12 @@ namespace OpenIddict.NHibernate.Stores
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
 
-			return await (from token in session.Query<TToken>()
-					.Fetch(token => token.Application)
-					.Fetch(token => token.Authorization)
-				where token.ReferenceId == identifier
-				select token).FirstOrDefaultAsync(cancellationToken);
+			return await session
+				.Query<TToken>()
+				.Fetch(token => token.Application)
+				.Fetch(token => token.Authorization)
+				.Where(token => token.ReferenceId == identifier)
+				.FirstOrDefaultAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -448,15 +362,16 @@ namespace OpenIddict.NHibernate.Stores
 
 			return ExecuteAsync(cancellationToken);
 
-			async IAsyncEnumerable<TToken> ExecuteAsync(CancellationToken cancellationToken)
+			async IAsyncEnumerable<TToken> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
+				var session = await this.Context.GetSessionAsync(ct);
 
-				await foreach (var token in (from token in session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					where token.Subject == subject
-					select token).AsAsyncEnumerable(cancellationToken))
+				var tokens = session.Query<TToken>()
+					.Fetch(token => token.Application)
+					.Fetch(token => token.Authorization)
+					.Where(token => token.Subject == subject).AsAsyncEnumerable(ct);
+
+				await foreach (var token in tokens)
 				{
 					yield return token;
 				}
@@ -472,7 +387,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the application identifier associated with the token.
 		/// </returns>
-		public virtual ValueTask<string> GetApplicationIdAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetApplicationIdAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -481,10 +396,10 @@ namespace OpenIddict.NHibernate.Stores
 
 			if (token.Application == null)
 			{
-				return new ValueTask<string>(result: null);
+				return new ValueTask<string?>(result: null);
 			}
 
-			return new ValueTask<string>(this.ConvertIdentifierToString(token.Application.Id));
+			return new ValueTask<string?>(this.ConvertIdentifierToString(token.Application.Id));
 		}
 
 		/// <summary>
@@ -499,8 +414,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the first element returned when executing the query.
 		/// </returns>
-		public virtual async ValueTask<TResult> GetAsync<TState, TResult>(
-			Func<IQueryable<TToken>, TState, IQueryable<TResult>> query
+		public virtual async ValueTask<TResult?> GetAsync<TState, TResult>(Func<IQueryable<TToken>, TState, IQueryable<TResult>> query
 			, TState state
 			, CancellationToken cancellationToken
 		)
@@ -512,12 +426,13 @@ namespace OpenIddict.NHibernate.Stores
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
 
-			return await query(
-					session.Query<TToken>()
-						.Fetch(token => token.Application)
-						.Fetch(token => token.Authorization)
-					, state
-				)
+			var tokens = session
+				.Query<TToken>()
+				.Fetch(token => token.Application)
+				.Fetch(token => token.Authorization);
+
+			return await query
+				.Invoke(tokens, state)
 				.FirstOrDefaultAsync(cancellationToken);
 		}
 
@@ -530,7 +445,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the authorization identifier associated with the token.
 		/// </returns>
-		public virtual ValueTask<string> GetAuthorizationIdAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetAuthorizationIdAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -539,10 +454,10 @@ namespace OpenIddict.NHibernate.Stores
 
 			if (token.Authorization == null)
 			{
-				return new ValueTask<string>(result: null);
+				return new ValueTask<string?>(result: null);
 			}
 
-			return new ValueTask<string>(this.ConvertIdentifierToString(token.Authorization.Id));
+			return new ValueTask<string?>(this.ConvertIdentifierToString(token.Authorization.Id));
 		}
 
 		/// <summary>
@@ -592,14 +507,14 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the unique identifier associated with the token.
 		/// </returns>
-		public virtual ValueTask<string> GetIdAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetIdAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			return new ValueTask<string>(this.ConvertIdentifierToString(token.Id));
+			return new ValueTask<string?>(this.ConvertIdentifierToString(token.Id));
 		}
 
 		/// <summary>
@@ -611,14 +526,14 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the payload associated with the specified token.
 		/// </returns>
-		public virtual ValueTask<string> GetPayloadAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetPayloadAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			return new ValueTask<string>(token.Payload);
+			return new ValueTask<string?>(token.Payload);
 		}
 
 		/// <summary>
@@ -632,7 +547,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// </returns>
 		public virtual ValueTask<ImmutableDictionary<string, JsonElement>> GetPropertiesAsync(TToken token, CancellationToken cancellationToken)
 		{
-			if (token == null)
+			if (token is null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
@@ -644,18 +559,40 @@ namespace OpenIddict.NHibernate.Stores
 
 			// Note: parsing the stringified properties is an expensive operation.
 			// To mitigate that, the resulting object is stored in the memory cache.
-			var key = string.Concat("d0509397-1bbf-40e7-97e1-5e6d7bc2536c", "\x1e", token.Properties);
-			var properties = this.Cache.GetOrCreate(key
-				, entry =>
-				{
-					entry.SetPriority(CacheItemPriority.High)
-						.SetSlidingExpiration(TimeSpan.FromMinutes(1));
+			var key = string.Concat("0783DFAC-EBC8-43D7-8D2E-FDFEB52A13AB", "\x1e", token.Properties);
+			var properties = this.Cache.GetOrCreate(key, entry =>
+			{
+				entry
+					.SetPriority(CacheItemPriority.High)
+					.SetSlidingExpiration(TimeSpan.FromMinutes(1));
 
-					return JsonSerializer.Deserialize<ImmutableDictionary<string, JsonElement>>(token.Properties);
+				using var document = JsonDocument.Parse(token.Properties);
+				var builder = ImmutableDictionary.CreateBuilder<string, JsonElement>();
+
+				foreach (var property in document.RootElement.EnumerateObject())
+				{
+					builder[property.Name] = property.Value.Clone();
 				}
-			);
+
+				return builder.ToImmutable();
+			})!;
 
 			return new ValueTask<ImmutableDictionary<string, JsonElement>>(properties);
+		}
+
+		public ValueTask<DateTimeOffset?> GetRedemptionDateAsync(TToken token, CancellationToken cancellationToken)
+		{
+			if (token is null)
+			{
+				throw new ArgumentNullException(nameof(token));
+			}
+
+			if (token.RedemptionDate is null)
+			{
+				return new ValueTask<DateTimeOffset?>(result: null);
+			}
+
+			return new ValueTask<DateTimeOffset?>(DateTime.SpecifyKind(token.RedemptionDate.Value, DateTimeKind.Utc));
 		}
 
 		/// <summary>
@@ -669,14 +606,14 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the reference identifier associated with the specified token.
 		/// </returns>
-		public virtual ValueTask<string> GetReferenceIdAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetReferenceIdAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			return new ValueTask<string>(token.ReferenceId);
+			return new ValueTask<string?>(token.ReferenceId);
 		}
 
 		/// <summary>
@@ -688,14 +625,14 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the status associated with the specified token.
 		/// </returns>
-		public virtual ValueTask<string> GetStatusAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetStatusAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			return new ValueTask<string>(token.Status);
+			return new ValueTask<string?>(token.Status);
 		}
 
 		/// <summary>
@@ -707,14 +644,14 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the subject associated with the specified token.
 		/// </returns>
-		public virtual ValueTask<string> GetSubjectAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetSubjectAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			return new ValueTask<string>(token.Subject);
+			return new ValueTask<string?>(token.Subject);
 		}
 
 		/// <summary>
@@ -726,14 +663,14 @@ namespace OpenIddict.NHibernate.Stores
 		/// A <see cref="ValueTask{TResult}"/> that can be used to monitor the asynchronous operation,
 		/// whose result returns the token type associated with the specified token.
 		/// </returns>
-		public virtual ValueTask<string> GetTypeAsync(TToken token, CancellationToken cancellationToken)
+		public virtual ValueTask<string?> GetTypeAsync(TToken token, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			return new ValueTask<string>(token.Type);
+			return new ValueTask<string?>(token.Type);
 		}
 
 		/// <summary>
@@ -753,12 +690,14 @@ namespace OpenIddict.NHibernate.Stores
 
 			catch (MemberAccessException exception)
 			{
+				var message = new StringBuilder()
+					.AppendLine("An error occurred while trying to create a new token instance.")
+					.Append("Make sure that the token entity is not abstract and has a public parameterless constructor ")
+					.Append("or create a custom token store that overrides 'InstantiateAsync()' to use a custom factory.")
+					.ToString();
+
 				return new ValueTask<TToken>(Task.FromException<TToken>(
-						new InvalidOperationException(new StringBuilder()
-								.AppendLine("An error occurred while trying to create a new token instance.")
-								.Append("Make sure that the token entity is not abstract and has a public parameterless constructor ")
-								.Append("or create a custom token store that overrides 'InstantiateAsync()' to use a custom factory.")
-								.ToString()
+						new InvalidOperationException(message
 							, exception
 						)
 					)
@@ -773,14 +712,15 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="offset">The number of results to skip.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>All the elements returned when executing the specified query.</returns>
-		public virtual async IAsyncEnumerable<TToken> ListAsync(
-			int? count
+		public virtual async IAsyncEnumerable<TToken> ListAsync(int? count
 			, int? offset
 			, [EnumeratorCancellation] CancellationToken cancellationToken
 		)
 		{
 			var session = await this.Context.GetSessionAsync(cancellationToken);
-			var query = session.Query<TToken>()
+
+			var query = session
+				.Query<TToken>()
 				.Fetch(token => token.Application)
 				.Fetch(token => token.Authorization)
 				.OrderBy(token => token.Id)
@@ -811,8 +751,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="state">The optional state.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>All the elements returned when executing the specified query.</returns>
-		public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(
-			Func<IQueryable<TToken>, TState, IQueryable<TResult>> query
+		public virtual IAsyncEnumerable<TResult> ListAsync<TState, TResult>(Func<IQueryable<TToken>, TState, IQueryable<TResult>> query
 			, TState state
 			, CancellationToken cancellationToken
 		)
@@ -824,38 +763,302 @@ namespace OpenIddict.NHibernate.Stores
 
 			return ExecuteAsync(cancellationToken);
 
-			async IAsyncEnumerable<TResult> ExecuteAsync(CancellationToken cancellationToken)
+			async IAsyncEnumerable<TResult> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
-				var session = await this.Context.GetSessionAsync(cancellationToken);
+				var session = await this.Context.GetSessionAsync(ct);
 
-				await foreach (var element in query(
-						session.Query<TToken>()
-							.Fetch(token => token.Application)
-							.Fetch(token => token.Authorization)
-						, state
-					)
-					.AsAsyncEnumerable(cancellationToken))
+				var tokens = session
+					.Query<TToken>()
+					.Fetch(token => token.Application)
+					.Fetch(token => token.Authorization);
+
+				var elements = query
+					.Invoke(tokens, state)
+					.AsAsyncEnumerable(ct);
+
+				await foreach (var element in elements)
 				{
 					yield return element;
 				}
 			}
 		}
 
-		/// <summary>
-		/// Removes the tokens that are marked as expired or invalid.
-		/// </summary>
-		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
-		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual async ValueTask PruneAsync(CancellationToken cancellationToken)
+		public async ValueTask<long> PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+		{
+			var date = threshold.UtcDateTime;
+
+			var session = await this.Context.GetSessionAsync(cancellationToken);
+			using var transaction = session.BeginTransaction(IsolationLevel.RepeatableRead);
+
+			try
+			{
+				// Delete all the tokens associated with the application.
+				var deletedEntries = await session
+					.Query<TToken>()
+					.Where(token => token.CreationDate < date)
+					.Where(token => (token.Status != OpenIddictConstants.Statuses.Inactive && token.Status != OpenIddictConstants.Statuses.Valid)
+						|| (token.Authorization != null && token.Authorization.Status != OpenIddictConstants.Statuses.Valid)
+						|| token.ExpirationDate < DateTime.UtcNow
+					)
+					.OrderBy(token => token.Id)
+					.DeleteAsync(cancellationToken);
+
+				await session.FlushAsync(cancellationToken);
+				await transaction.CommitAsync(cancellationToken);
+
+				return deletedEntries;
+			}
+			catch (StaleObjectStateException exception)
+			{
+				throw new OpenIddictExceptions.ConcurrencyException("An error occurred while pruning tokens."
+					, exception
+				);
+			}
+		}
+
+		public async ValueTask<long> RevokeAsync(string? subject
+			, string? client
+			, string? status
+			, string? type
+			, CancellationToken cancellationToken
+		)
 		{
 			var session = await this.Context.GetSessionAsync(cancellationToken);
 
-			await (from token in session.Query<TToken>()
-				where token.Status != OpenIddictConstants.Statuses.Valid ||
-					token.ExpirationDate < DateTimeOffset.UtcNow
-				select token).DeleteAsync(cancellationToken);
+			var query = session.Query<TToken>();
 
-			await session.FlushAsync(cancellationToken);
+			query = query
+				.Fetch(authorization => authorization.Application)
+				.Fetch(authorization => authorization.Authorization);
+
+			if (!string.IsNullOrEmpty(subject))
+			{
+				query = query.Where(authorization => authorization.Subject == subject);
+			}
+
+			if (!string.IsNullOrEmpty(client))
+			{
+				var key = this.ConvertIdentifierFromString(client);
+
+				query = query.Where(authorization => authorization.Application != null && authorization.Application!.Id!.Equals(key));
+			}
+
+			if (!string.IsNullOrEmpty(status))
+			{
+				query = query.Where(authorization => authorization.Status == status);
+			}
+
+			if (!string.IsNullOrEmpty(type))
+			{
+				query = query.Where(authorization => authorization.Type == type);
+			}
+
+			List<Exception>? exceptions = null;
+
+			var result = 0L;
+
+			foreach (var token in await query.ToListAsync(cancellationToken))
+			{
+				token.Status = OpenIddictConstants.Statuses.Revoked;
+
+				try
+				{
+					await session.UpdateAsync(token, cancellationToken);
+				}
+
+				catch (Exception exception)
+				{
+					exceptions ??= [];
+					exceptions.Add(exception);
+
+					continue;
+				}
+
+				result++;
+			}
+
+			try
+			{
+				await session.FlushAsync(cancellationToken);
+			}
+			catch (Exception exception)
+			{
+				exceptions ??= [];
+				exceptions.Add(exception);
+			}
+
+			if (exceptions is not null)
+			{
+				throw new AggregateException("An error occurred while pruning tokens.", exceptions);
+			}
+
+			return result;
+		}
+
+		public async ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken = new CancellationToken())
+		{
+			ArgumentException.ThrowIfNullOrEmpty(identifier);
+
+			var key = this.ConvertIdentifierFromString(identifier);
+
+			List<Exception>? exceptions = null;
+
+			var result = 0L;
+
+			var session = await this.Context.GetSessionAsync(cancellationToken);
+
+			var tokens = await session
+				.Query<TToken>()
+				.Fetch(authorization => authorization.Application)
+				.Fetch(authorization => authorization.Authorization)
+				.Where(authorization => authorization.Application!.Id!.Equals(key))
+				.ToListAsync(cancellationToken);
+
+			foreach (var token in tokens)
+			{
+				token.Status = OpenIddictConstants.Statuses.Revoked;
+
+				try
+				{
+					await session.UpdateAsync(token, cancellationToken);
+				}
+				catch (Exception exception)
+				{
+					exceptions ??= [];
+					exceptions.Add(exception);
+
+					continue;
+				}
+
+				result++;
+			}
+
+			try
+			{
+				await session.FlushAsync(cancellationToken);
+			}
+			catch (Exception exception)
+			{
+				exceptions ??= [];
+				exceptions.Add(exception);
+			}
+
+			if (exceptions is not null)
+			{
+				throw new AggregateException("An error occurred while pruning tokens.", exceptions);
+			}
+
+			return result;
+		}
+
+		public async ValueTask<long> RevokeByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
+		{
+			ArgumentException.ThrowIfNullOrEmpty(identifier);
+
+			var key = this.ConvertIdentifierFromString(identifier);
+
+			List<Exception>? exceptions = null;
+
+			var result = 0L;
+
+			var session = await this.Context.GetSessionAsync(cancellationToken);
+
+			var tokens = await session
+				.Query<TToken>()
+				.Fetch(authorization => authorization.Application)
+				.Fetch(authorization => authorization.Authorization)
+				.Where(authorization => authorization.Authorization!.Id!.Equals(key))
+				.ToListAsync(cancellationToken);
+
+			foreach (var token in tokens)
+			{
+				token.Status = OpenIddictConstants.Statuses.Revoked;
+
+				try
+				{
+					await session.UpdateAsync(token, cancellationToken);
+				}
+				catch (Exception exception)
+				{
+					exceptions ??= [];
+					exceptions.Add(exception);
+
+					continue;
+				}
+
+				result++;
+			}
+
+			try
+			{
+				await session.FlushAsync(cancellationToken);
+			}
+			catch (Exception exception)
+			{
+				exceptions ??= [];
+				exceptions.Add(exception);
+			}
+
+			if (exceptions is not null)
+			{
+				throw new AggregateException("An error occurred while pruning tokens.", exceptions);
+			}
+
+			return result;
+		}
+
+		public async ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken = new CancellationToken())
+		{
+			ArgumentException.ThrowIfNullOrEmpty(subject);
+
+			List<Exception>? exceptions = null;
+
+			var result = 0L;
+
+			var session = await this.Context.GetSessionAsync(cancellationToken);
+
+			var tokens = await session
+				.Query<TToken>()
+				.Fetch(authorization => authorization.Application)
+				.Fetch(authorization => authorization.Authorization)
+				.Where(authorization => authorization.Subject == subject)
+				.ToListAsync(cancellationToken);
+
+			foreach (var token in tokens)
+			{
+				token.Status = OpenIddictConstants.Statuses.Revoked;
+
+				try
+				{
+					await session.UpdateAsync(token, cancellationToken);
+				}
+				catch (Exception exception)
+				{
+					exceptions ??= [];
+					exceptions.Add(exception);
+
+					continue;
+				}
+
+				result++;
+			}
+
+			try
+			{
+				await session.FlushAsync(cancellationToken);
+			}
+			catch (Exception exception)
+			{
+				exceptions ??= [];
+				exceptions.Add(exception);
+			}
+
+			if (exceptions is not null)
+			{
+				throw new AggregateException("An error occurred while pruning tokens.", exceptions);
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -865,7 +1068,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="identifier">The unique identifier associated with the client application.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual async ValueTask SetApplicationIdAsync(TToken token, string identifier, CancellationToken cancellationToken)
+		public virtual async ValueTask SetApplicationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -878,7 +1081,6 @@ namespace OpenIddict.NHibernate.Stores
 			{
 				token.Application = await session.LoadAsync<TApplication>(this.ConvertIdentifierFromString(identifier), cancellationToken);
 			}
-
 			else
 			{
 				token.Application = null;
@@ -892,7 +1094,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="identifier">The unique identifier associated with the authorization.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual async ValueTask SetAuthorizationIdAsync(TToken token, string identifier, CancellationToken cancellationToken)
+		public virtual async ValueTask SetAuthorizationIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -921,12 +1123,12 @@ namespace OpenIddict.NHibernate.Stores
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
 		public virtual ValueTask SetCreationDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
 		{
-			if (token == null)
+			if (token is null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			token.CreationDate = date;
+			token.CreationDate = date?.UtcDateTime;
 
 			return default;
 		}
@@ -945,7 +1147,7 @@ namespace OpenIddict.NHibernate.Stores
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			token.ExpirationDate = date;
+			token.ExpirationDate = date?.UtcDateTime;
 
 			return default;
 		}
@@ -957,7 +1159,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="payload">The payload associated with the token.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetPayloadAsync(TToken token, string payload, CancellationToken cancellationToken)
+		public virtual ValueTask SetPayloadAsync(TToken token, string? payload, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -978,25 +1180,49 @@ namespace OpenIddict.NHibernate.Stores
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
 		public virtual ValueTask SetPropertiesAsync(TToken token, ImmutableDictionary<string, JsonElement> properties, CancellationToken cancellationToken)
 		{
-			if (token == null)
+			if (token is null)
 			{
 				throw new ArgumentNullException(nameof(token));
 			}
 
-			if (properties == null || properties.IsEmpty)
+			if (properties is not { Count: > 0 })
 			{
 				token.Properties = null;
 
 				return default;
 			}
 
-			token.Properties = JsonSerializer.Serialize(properties
-				, new JsonSerializerOptions
-				{
-					Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-					, WriteIndented = false
-				}
-			);
+			using var stream = new MemoryStream();
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+			{
+				Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+				Indented = false,
+			});
+
+			writer.WriteStartObject();
+
+			foreach (var property in properties)
+			{
+				writer.WritePropertyName(property.Key);
+				property.Value.WriteTo(writer);
+			}
+
+			writer.WriteEndObject();
+			writer.Flush();
+
+			token.Properties = Encoding.UTF8.GetString(stream.ToArray());
+
+			return default;
+		}
+
+		public ValueTask SetRedemptionDateAsync(TToken token, DateTimeOffset? date, CancellationToken cancellationToken)
+		{
+			if (token is null)
+			{
+				throw new ArgumentNullException(nameof(token));
+			}
+
+			token.RedemptionDate = date?.UtcDateTime;
 
 			return default;
 		}
@@ -1010,7 +1236,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="identifier">The reference identifier associated with the token.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetReferenceIdAsync(TToken token, string identifier, CancellationToken cancellationToken)
+		public virtual ValueTask SetReferenceIdAsync(TToken token, string? identifier, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -1029,7 +1255,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="status">The status associated with the authorization.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetStatusAsync(TToken token, string status, CancellationToken cancellationToken)
+		public virtual ValueTask SetStatusAsync(TToken token, string? status, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -1048,7 +1274,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="subject">The subject associated with the token.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetSubjectAsync(TToken token, string subject, CancellationToken cancellationToken)
+		public virtual ValueTask SetSubjectAsync(TToken token, string? subject, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -1067,7 +1293,7 @@ namespace OpenIddict.NHibernate.Stores
 		/// <param name="type">The token type associated with the token.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> that can be used to abort the operation.</param>
 		/// <returns>A <see cref="ValueTask"/> that can be used to monitor the asynchronous operation.</returns>
-		public virtual ValueTask SetTypeAsync(TToken token, string type, CancellationToken cancellationToken)
+		public virtual ValueTask SetTypeAsync(TToken token, string? type, CancellationToken cancellationToken)
 		{
 			if (token == null)
 			{
@@ -1102,10 +1328,12 @@ namespace OpenIddict.NHibernate.Stores
 
 			catch (StaleObjectStateException exception)
 			{
-				throw new OpenIddictExceptions.ConcurrencyException(new StringBuilder()
-						.AppendLine("The token was concurrently updated and cannot be persisted in its current state.")
-						.Append("Reload the token from the database and retry the operation.")
-						.ToString()
+				var message = new StringBuilder()
+					.AppendLine("The token was concurrently updated and cannot be persisted in its current state.")
+					.Append("Reload the token from the database and retry the operation.")
+					.ToString();
+
+				throw new OpenIddictExceptions.ConcurrencyException(message
 					, exception
 				);
 			}

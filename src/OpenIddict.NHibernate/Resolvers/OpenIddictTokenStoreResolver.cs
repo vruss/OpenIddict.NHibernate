@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
+using OpenIddict.NHibernate.Extensions;
 using OpenIddict.NHibernate.Models;
 using OpenIddict.NHibernate.Stores;
 
@@ -16,8 +17,7 @@ namespace OpenIddict.NHibernate.Resolvers
 		private readonly TypeResolutionCache cache;
 		private readonly IServiceProvider provider;
 
-		public OpenIddictTokenStoreResolver(
-			TypeResolutionCache cache
+		public OpenIddictTokenStoreResolver(TypeResolutionCache cache
 			, IServiceProvider provider
 		)
 		{
@@ -46,13 +46,14 @@ namespace OpenIddict.NHibernate.Resolvers
 					var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictToken<,,>));
 					if (root == null)
 					{
-						throw new InvalidOperationException(new StringBuilder()
+						var message = new StringBuilder()
 							.AppendLine("The specified token type is not compatible with the NHibernate stores.")
 							.Append("When enabling the NHibernate stores, make sure you use the built-in ")
 							.Append("'OpenIddictToken' entity (from the 'OpenIddict.NHibernate.Models' package) ")
 							.Append("or a custom entity that inherits from the generic 'OpenIddictToken' entity.")
-							.ToString()
-						);
+							.ToString();
+
+						throw new InvalidOperationException(message);
 					}
 
 					return typeof(OpenIddictTokenStore<,,,>).MakeGenericType(/* TToken: */ key
