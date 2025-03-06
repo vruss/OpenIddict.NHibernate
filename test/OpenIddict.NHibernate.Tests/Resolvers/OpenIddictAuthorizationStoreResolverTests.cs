@@ -6,73 +6,80 @@ using Microsoft.Extensions.Options;
 using Moq;
 using OpenIddict.Abstractions;
 using OpenIddict.NHibernate.Models;
+using OpenIddict.NHibernate.Resolvers;
+using OpenIddict.NHibernate.Stores;
 using Xunit;
-using static OpenIddict.NHibernate.OpenIddictAuthorizationStoreResolver;
+using static OpenIddict.NHibernate.Resolvers.OpenIddictAuthorizationStoreResolver;
 
-namespace OpenIddict.NHibernate.Tests
+namespace OpenIddict.NHibernate.Tests.Resolvers
 {
-    public class OpenIddictAuthorizationStoreResolverTests
-    {
-        [Fact]
-        public void Get_ReturnsCustomStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
-        {
-            // Arrange
-            var services = new ServiceCollection();
-            services.AddSingleton(Mock.Of<IOpenIddictAuthorizationStore<CustomAuthorization>>());
+	public class OpenIddictAuthorizationStoreResolverTests
+	{
+		[Fact]
+		public void Get_ReturnsCustomStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
+		{
+			// Arrange
+			var services = new ServiceCollection();
+			services.AddSingleton(Mock.Of<IOpenIddictAuthorizationStore<CustomAuthorization>>());
 
-            var provider = services.BuildServiceProvider();
-            var resolver = new OpenIddictAuthorizationStoreResolver(new TypeResolutionCache(), provider);
+			var provider = services.BuildServiceProvider();
+			var resolver = new OpenIddictAuthorizationStoreResolver(new TypeResolutionCache(), provider);
 
-            // Act and assert
-            Assert.NotNull(resolver.Get<CustomAuthorization>());
-        }
+			// Act and assert
+			Assert.NotNull(resolver.Get<CustomAuthorization>());
+		}
 
-        [Fact]
-        public void Get_ThrowsAnExceptionForInvalidEntityType()
-        {
-            // Arrange
-            var services = new ServiceCollection();
+		[Fact]
+		public void Get_ThrowsAnExceptionForInvalidEntityType()
+		{
+			// Arrange
+			var services = new ServiceCollection();
 
-            var provider = services.BuildServiceProvider();
-            var resolver = new OpenIddictAuthorizationStoreResolver(new TypeResolutionCache(), provider);
+			var provider = services.BuildServiceProvider();
+			var resolver = new OpenIddictAuthorizationStoreResolver(new TypeResolutionCache(), provider);
 
-            // Act and assert
-            var exception = Assert.Throws<InvalidOperationException>(() => resolver.Get<CustomAuthorization>());
+			// Act and assert
+			var exception = Assert.Throws<InvalidOperationException>(() => resolver.Get<CustomAuthorization>());
 
-            Assert.Equal(new StringBuilder()
-                .AppendLine("The specified authorization type is not compatible with the NHibernate stores.")
-                .Append("When enabling the NHibernate stores, make sure you use the built-in ")
-                .Append("'OpenIddictAuthorization' entity (from the 'OpenIddict.NHibernate.Models' package) ")
-                .Append("or a custom entity that inherits from the generic 'OpenIddictAuthorization' entity.")
-                .ToString(), exception.Message);
-        }
+			var expectedMessage = new StringBuilder()
+				.AppendLine("The specified authorization type is not compatible with the NHibernate stores.")
+				.Append("When enabling the NHibernate stores, make sure you use the built-in ")
+				.Append("'OpenIddictAuthorization' entity (from the 'OpenIddict.NHibernate.Models' package) ")
+				.Append("or a custom entity that inherits from the generic 'OpenIddictAuthorization' entity.")
+				.ToString();
 
-        [Fact]
-        public void Get_ReturnsDefaultStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
-        {
-            // Arrange
-            var services = new ServiceCollection();
-            services.AddSingleton(Mock.Of<IOpenIddictAuthorizationStore<CustomAuthorization>>());
-            services.AddSingleton(CreateStore());
+			Assert.Equal(expectedMessage, exception.Message);
+		}
 
-            var provider = services.BuildServiceProvider();
-            var resolver = new OpenIddictAuthorizationStoreResolver(new TypeResolutionCache(), provider);
+		[Fact]
+		public void Get_ReturnsDefaultStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
+		{
+			// Arrange
+			var services = new ServiceCollection();
+			services.AddSingleton(Mock.Of<IOpenIddictAuthorizationStore<CustomAuthorization>>());
+			services.AddSingleton(CreateStore());
 
-            // Act and assert
-            Assert.NotNull(resolver.Get<MyAuthorization>());
-        }
+			var provider = services.BuildServiceProvider();
+			var resolver = new OpenIddictAuthorizationStoreResolver(new TypeResolutionCache(), provider);
 
-        private static OpenIddictAuthorizationStore<MyAuthorization, MyApplication, MyToken, long> CreateStore()
-            => new Mock<OpenIddictAuthorizationStore<MyAuthorization, MyApplication, MyToken, long>>(
-                Mock.Of<IMemoryCache>(),
-                Mock.Of<IOpenIddictNHibernateContext>(),
-                Mock.Of<IOptionsMonitor<OpenIddictNHibernateOptions>>()).Object;
+			// Act and assert
+			Assert.NotNull(resolver.Get<MyAuthorization>());
+		}
 
-        public class CustomAuthorization { }
+		private static OpenIddictAuthorizationStore<MyAuthorization, MyApplication, MyToken, long> CreateStore()
+		{
+			return new Mock<OpenIddictAuthorizationStore<MyAuthorization, MyApplication, MyToken, long>>(Mock.Of<IMemoryCache>()
+				, Mock.Of<IOpenIddictNHibernateContext>()
+				, Mock.Of<IOptionsMonitor<OpenIddictNHibernateOptions>>()
+			)
+			.Object;
+		}
 
-        public class MyApplication : OpenIddictApplication<long, MyAuthorization, MyToken> { }
-        public class MyAuthorization : OpenIddictAuthorization<long, MyApplication, MyToken> { }
-        public class MyScope : OpenIddictScope<long> { }
-        public class MyToken : OpenIddictToken<long, MyApplication, MyAuthorization> { }
-    }
+		public class CustomAuthorization { }
+
+		public class MyApplication : OpenIddictApplication<long, MyAuthorization, MyToken> { }
+		public class MyAuthorization : OpenIddictAuthorization<long, MyApplication, MyToken> { }
+		public class MyScope : OpenIddictScope<long> { }
+		public class MyToken : OpenIddictToken<long, MyApplication, MyAuthorization> { }
+	}
 }

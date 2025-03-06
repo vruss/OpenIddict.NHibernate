@@ -19,7 +19,7 @@ namespace OpenIddict.NHibernate
 		/// <param name="builder">The services builder used by OpenIddict to register new services.</param>
 		/// <remarks>This extension can be safely called multiple times.</remarks>
 		/// <returns>The <see cref="OpenIddictNHibernateBuilder"/>.</returns>
-		public static OpenIddictNHibernateBuilder UseNHibernate(this OpenIddictCoreBuilder builder)
+		public static OpenIddictNHibernateBuilder UseNHibernate(this OpenIddictCoreBuilder? builder)
 		{
 			if (builder == null)
 			{
@@ -66,8 +66,8 @@ namespace OpenIddict.NHibernate
 		/// <param name="configuration">The configuration delegate used to configure the NHibernate services.</param>
 		/// <remarks>This extension can be safely called multiple times.</remarks>
 		/// <returns>The <see cref="OpenIddictCoreBuilder"/>.</returns>
-		public static OpenIddictCoreBuilder UseNHibernate(this OpenIddictCoreBuilder builder
-			, Action<OpenIddictNHibernateBuilder> configuration
+		public static OpenIddictCoreBuilder UseNHibernate(this OpenIddictCoreBuilder? builder
+			, Action<OpenIddictNHibernateBuilder>? configuration
 		)
 		{
 			if (builder == null)
