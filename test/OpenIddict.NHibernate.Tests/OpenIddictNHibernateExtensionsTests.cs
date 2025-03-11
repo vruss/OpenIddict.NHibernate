@@ -50,17 +50,17 @@ namespace OpenIddict.NHibernate.Tests
 			var provider = services.BuildServiceProvider();
 			var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
 
-			Assert.Equal(typeof(OpenIddictApplication), options.DefaultApplicationType);
-			Assert.Equal(typeof(OpenIddictAuthorization), options.DefaultAuthorizationType);
-			Assert.Equal(typeof(OpenIddictScope), options.DefaultScopeType);
-			Assert.Equal(typeof(OpenIddictToken), options.DefaultTokenType);
+			Assert.Equal(typeof(OpenIddictNHibernateApplication), options.DefaultApplicationType);
+			Assert.Equal(typeof(OpenIddictNHibernateAuthorization), options.DefaultAuthorizationType);
+			Assert.Equal(typeof(OpenIddictNHibernateScope), options.DefaultScopeType);
+			Assert.Equal(typeof(OpenIddictNHibernateToken), options.DefaultTokenType);
 		}
 
 		[Theory]
-		[InlineData(typeof(IOpenIddictApplicationStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictApplicationStoreResolver))]
-		[InlineData(typeof(IOpenIddictAuthorizationStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictAuthorizationStoreResolver))]
-		[InlineData(typeof(IOpenIddictScopeStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictScopeStoreResolver))]
-		[InlineData(typeof(IOpenIddictTokenStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictTokenStoreResolver))]
+		[InlineData(typeof(IOpenIddictApplicationStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictNHibernateApplicationStoreResolver))]
+		[InlineData(typeof(IOpenIddictAuthorizationStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictNHibernateAuthorizationStoreResolver))]
+		[InlineData(typeof(IOpenIddictScopeStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictNHibernateScopeStoreResolver))]
+		[InlineData(typeof(IOpenIddictTokenStoreResolver), typeof(OpenIddict.NHibernate.Resolvers.OpenIddictNHibernateTokenStoreResolver))]
 		public void UseNHibernate_RegistersNHibernateStoreResolvers(Type serviceType, Type implementationType)
 		{
 			// Arrange
@@ -75,10 +75,10 @@ namespace OpenIddict.NHibernate.Tests
 		}
 
 		[Theory]
-		[InlineData(typeof(OpenIddictApplicationStore<,,,>))]
-		[InlineData(typeof(OpenIddictAuthorizationStore<,,,>))]
-		[InlineData(typeof(OpenIddictScopeStore<,>))]
-		[InlineData(typeof(OpenIddictTokenStore<,,,>))]
+		[InlineData(typeof(OpenIddictNHibernateApplicationStore<,,,>))]
+		[InlineData(typeof(OpenIddictNHibernateAuthorizationStore<,,,>))]
+		[InlineData(typeof(OpenIddictNHibernateScopeStore<,>))]
+		[InlineData(typeof(OpenIddictNHibernateTokenStore<,,,>))]
 		public void UseNHibernate_RegistersNHibernateStore(Type type)
 		{
 			// Arrange

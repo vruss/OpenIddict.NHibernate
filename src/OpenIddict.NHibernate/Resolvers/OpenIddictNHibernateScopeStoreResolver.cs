@@ -12,12 +12,12 @@ namespace OpenIddict.NHibernate.Resolvers
 	/// <summary>
 	/// Exposes a method allowing to resolve a scope store.
 	/// </summary>
-	public class OpenIddictScopeStoreResolver : IOpenIddictScopeStoreResolver
+	public class OpenIddictNHibernateScopeStoreResolver : IOpenIddictScopeStoreResolver
 	{
 		private readonly TypeResolutionCache cache;
 		private readonly IServiceProvider provider;
 
-		public OpenIddictScopeStoreResolver(TypeResolutionCache cache
+		public OpenIddictNHibernateScopeStoreResolver(TypeResolutionCache cache
 			, IServiceProvider provider
 		)
 		{
@@ -42,7 +42,7 @@ namespace OpenIddict.NHibernate.Resolvers
 
 			var type = this.cache.GetOrAdd(typeof(TScope), key =>
 				{
-					var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictScope<>));
+					var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictNHibernateScope<>));
 					if (root == null)
 					{
 						throw new InvalidOperationException(new StringBuilder()
@@ -54,7 +54,7 @@ namespace OpenIddict.NHibernate.Resolvers
 						);
 					}
 
-					return typeof(OpenIddictScopeStore<,>).MakeGenericType(/* TScope: */ key
+					return typeof(OpenIddictNHibernateScopeStore<,>).MakeGenericType(/* TScope: */ key
 						, /* TKey: */ root.GenericTypeArguments[0]
 					);
 				}

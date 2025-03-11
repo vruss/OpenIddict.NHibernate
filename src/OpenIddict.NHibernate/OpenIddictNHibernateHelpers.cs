@@ -24,7 +24,7 @@ namespace OpenIddict.NHibernate
 		/// <returns>The <see cref="Configuration"/>.</returns>
 		public static Configuration UseOpenIddict(this Configuration configuration)
 		{
-			return configuration.UseOpenIddict<OpenIddictApplication, OpenIddictAuthorization, OpenIddictScope, OpenIddictToken, string>();
+			return configuration.UseOpenIddict<OpenIddictNHibernateApplication, OpenIddictNHibernateAuthorization, OpenIddictNHibernateScope, OpenIddictNHibernateToken, string>();
 		}
 
 		/// <summary>
@@ -36,7 +36,7 @@ namespace OpenIddict.NHibernate
 		public static Configuration UseOpenIddict<TKey>(this Configuration configuration)
 			where TKey : IEquatable<TKey>
 		{
-			return configuration.UseOpenIddict<OpenIddictApplication<TKey>, OpenIddictAuthorization<TKey>, OpenIddictScope<TKey>, OpenIddictToken<TKey>, TKey>();
+			return configuration.UseOpenIddict<OpenIddictNHibernateApplication<TKey>, OpenIddictNHibernateAuthorization<TKey>, OpenIddictNHibernateScope<TKey>, OpenIddictNHibernateToken<TKey>, TKey>();
 		}
 
 		/// <summary>
@@ -46,19 +46,19 @@ namespace OpenIddict.NHibernate
 		/// <param name="configuration">The NHibernate configuration builder.</param>
 		/// <returns>The <see cref="Configuration"/>.</returns>
 		public static Configuration UseOpenIddict<TApplication, TAuthorization, TScope, TToken, TKey>(this Configuration configuration)
-			where TApplication : OpenIddictApplication<TKey, TAuthorization, TToken>
-			where TAuthorization : OpenIddictAuthorization<TKey, TApplication, TToken>
-			where TScope : OpenIddictScope<TKey>
-			where TToken : OpenIddictToken<TKey, TApplication, TAuthorization>
+			where TApplication : OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
+			where TAuthorization : OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
+			where TScope : OpenIddictNHibernateScope<TKey>
+			where TToken : OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
 			where TKey : IEquatable<TKey>
 		{
 			ArgumentNullException.ThrowIfNull(configuration);
 
 			var mapper = new ModelMapper();
-			mapper.AddMapping<OpenIddictApplicationMapping<TApplication, TAuthorization, TToken, TKey>>();
-			mapper.AddMapping<OpenIddictAuthorizationMapping<TAuthorization, TApplication, TToken, TKey>>();
-			mapper.AddMapping<OpenIddictScopeMapping<TScope, TKey>>();
-			mapper.AddMapping<OpenIddictTokenMapping<TToken, TApplication, TAuthorization, TKey>>();
+			mapper.AddMapping<OpenIddictNHibernateApplicationMapping<TApplication, TAuthorization, TToken, TKey>>();
+			mapper.AddMapping<OpenIddictNHibernateAuthorizationMapping<TAuthorization, TApplication, TToken, TKey>>();
+			mapper.AddMapping<OpenIddictNHibernateScopeMapping<TScope, TKey>>();
+			mapper.AddMapping<OpenIddictNHibernateTokenMapping<TToken, TApplication, TAuthorization, TKey>>();
 
 			configuration.AddMapping(mapper.CompileMappingForAllExplicitlyAddedEntities());
 

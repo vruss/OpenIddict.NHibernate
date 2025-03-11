@@ -12,12 +12,12 @@ namespace OpenIddict.NHibernate.Resolvers
 	/// <summary>
 	/// Exposes a method allowing to resolve an authorization store.
 	/// </summary>
-	public class OpenIddictAuthorizationStoreResolver : IOpenIddictAuthorizationStoreResolver
+	public class OpenIddictNHibernateAuthorizationStoreResolver : IOpenIddictAuthorizationStoreResolver
 	{
 		private readonly TypeResolutionCache cache;
 		private readonly IServiceProvider provider;
 
-		public OpenIddictAuthorizationStoreResolver(TypeResolutionCache cache
+		public OpenIddictNHibernateAuthorizationStoreResolver(TypeResolutionCache cache
 			, IServiceProvider provider
 		)
 		{
@@ -42,7 +42,7 @@ namespace OpenIddict.NHibernate.Resolvers
 
 			var type = this.cache.GetOrAdd(typeof(TAuthorization), key =>
 				{
-					var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictAuthorization<,,>));
+					var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictNHibernateAuthorization<,,>));
 					if (root == null)
 					{
 						throw new InvalidOperationException(new StringBuilder()
@@ -54,7 +54,7 @@ namespace OpenIddict.NHibernate.Resolvers
 						);
 					}
 
-					return typeof(OpenIddictAuthorizationStore<,,,>).MakeGenericType( /* TAuthorization: */ key
+					return typeof(OpenIddictNHibernateAuthorizationStore<,,,>).MakeGenericType( /* TAuthorization: */ key
 						, /* TApplication: */ root.GenericTypeArguments[1]
 						, /* TToken: */ root.GenericTypeArguments[2]
 						, /* TKey: */ root.GenericTypeArguments[0]

@@ -12,7 +12,7 @@ using Xunit;
 
 namespace OpenIddict.NHibernate.Tests.Resolvers
 {
-	public class OpenIddictScopeStoreResolverTests
+	public class OpenIddictNHibernateScopeStoreResolverTests
 	{
 		[Fact]
 		public void Get_ReturnsCustomStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
@@ -22,7 +22,7 @@ namespace OpenIddict.NHibernate.Tests.Resolvers
 			services.AddSingleton(Mock.Of<IOpenIddictScopeStore<CustomScope>>());
 
 			var provider = services.BuildServiceProvider();
-			var resolver = new OpenIddictScopeStoreResolver(new OpenIddictScopeStoreResolver.TypeResolutionCache(), provider);
+			var resolver = new OpenIddictNHibernateScopeStoreResolver(new OpenIddictNHibernateScopeStoreResolver.TypeResolutionCache(), provider);
 
 			// Act and assert
 			Assert.NotNull(resolver.Get<CustomScope>());
@@ -35,7 +35,7 @@ namespace OpenIddict.NHibernate.Tests.Resolvers
 			var services = new ServiceCollection();
 
 			var provider = services.BuildServiceProvider();
-			var resolver = new OpenIddictScopeStoreResolver(new OpenIddictScopeStoreResolver.TypeResolutionCache(), provider);
+			var resolver = new OpenIddictNHibernateScopeStoreResolver(new OpenIddictNHibernateScopeStoreResolver.TypeResolutionCache(), provider);
 
 			// Act and assert
 			var exception = Assert.Throws<InvalidOperationException>(() => resolver.Get<CustomScope>());
@@ -59,15 +59,15 @@ namespace OpenIddict.NHibernate.Tests.Resolvers
 			services.AddSingleton(CreateStore());
 
 			var provider = services.BuildServiceProvider();
-			var resolver = new OpenIddictScopeStoreResolver(new OpenIddictScopeStoreResolver.TypeResolutionCache(), provider);
+			var resolver = new OpenIddictNHibernateScopeStoreResolver(new OpenIddictNHibernateScopeStoreResolver.TypeResolutionCache(), provider);
 
 			// Act and assert
-			Assert.NotNull(resolver.Get<MyScope>());
+			Assert.NotNull(resolver.Get<MyNHibernateScope>());
 		}
 
-		private static OpenIddictScopeStore<MyScope, long> CreateStore()
+		private static OpenIddictNHibernateScopeStore<MyNHibernateScope, long> CreateStore()
 		{
-			return new Mock<OpenIddictScopeStore<MyScope, long>>(Mock.Of<IMemoryCache>()
+			return new Mock<OpenIddictNHibernateScopeStore<MyNHibernateScope, long>>(Mock.Of<IMemoryCache>()
 				, Mock.Of<IOpenIddictNHibernateContext>()
 				, Mock.Of<IOptionsMonitor<OpenIddictNHibernateOptions>>()
 			)
@@ -76,9 +76,9 @@ namespace OpenIddict.NHibernate.Tests.Resolvers
 
 		public class CustomScope { }
 
-		public class MyApplication : OpenIddictApplication<long, MyAuthorization, MyToken> { }
-		public class MyAuthorization : OpenIddictAuthorization<long, MyApplication, MyToken> { }
-		public class MyScope : OpenIddictScope<long> { }
-		public class MyToken : OpenIddictToken<long, MyApplication, MyAuthorization> { }
+		public class MyNHibernateApplication : OpenIddictNHibernateApplication<long, MyNHibernateAuthorization, MyNHibernateToken> { }
+		public class MyNHibernateAuthorization : OpenIddictNHibernateAuthorization<long, MyNHibernateApplication, MyNHibernateToken> { }
+		public class MyNHibernateScope : OpenIddictNHibernateScope<long> { }
+		public class MyNHibernateToken : OpenIddictNHibernateToken<long, MyNHibernateApplication, MyNHibernateAuthorization> { }
 	}
 }

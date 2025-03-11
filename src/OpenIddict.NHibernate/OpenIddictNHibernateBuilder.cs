@@ -64,7 +64,7 @@ namespace OpenIddict.NHibernate
 		public OpenIddictNHibernateBuilder ReplaceDefaultEntities<TKey>()
 			where TKey : IEquatable<TKey>
 		{
-			return this.ReplaceDefaultEntities<OpenIddictApplication<TKey>, OpenIddictAuthorization<TKey>, OpenIddictScope<TKey>, OpenIddictToken<TKey>, TKey>();
+			return this.ReplaceDefaultEntities<OpenIddictNHibernateApplication<TKey>, OpenIddictNHibernateAuthorization<TKey>, OpenIddictNHibernateScope<TKey>, OpenIddictNHibernateToken<TKey>, TKey>();
 		}
 
 		/// <summary>
@@ -72,10 +72,10 @@ namespace OpenIddict.NHibernate
 		/// </summary>
 		/// <returns>The <see cref="OpenIddictNHibernateBuilder"/>.</returns>
 		public OpenIddictNHibernateBuilder ReplaceDefaultEntities<TApplication, TAuthorization, TScope, TToken, TKey>()
-			where TApplication : OpenIddictApplication<TKey, TAuthorization, TToken>
-			where TAuthorization : OpenIddictAuthorization<TKey, TApplication, TToken>
-			where TScope : OpenIddictScope<TKey>
-			where TToken : OpenIddictToken<TKey, TApplication, TAuthorization>
+			where TApplication : OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
+			where TAuthorization : OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
+			where TScope : OpenIddictNHibernateScope<TKey>
+			where TToken : OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
 			where TKey : IEquatable<TKey>
 		{
 			this.Services.Configure<OpenIddictCoreOptions>(options =>

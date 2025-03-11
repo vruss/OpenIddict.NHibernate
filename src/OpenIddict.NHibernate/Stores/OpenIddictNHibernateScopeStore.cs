@@ -23,9 +23,9 @@ namespace OpenIddict.NHibernate.Stores
 	/// <summary>
 	/// Provides methods allowing to manage the scopes stored in a database.
 	/// </summary>
-	public class OpenIddictScopeStore : OpenIddictScopeStore<OpenIddictScope, string>
+	public class OpenIddictNHibernateScopeStore : OpenIddictNHibernateScopeStore<OpenIddictNHibernateScope, string>
 	{
-		public OpenIddictScopeStore(IMemoryCache cache
+		public OpenIddictNHibernateScopeStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)
@@ -38,10 +38,10 @@ namespace OpenIddict.NHibernate.Stores
 	/// Provides methods allowing to manage the scopes stored in a database.
 	/// </summary>
 	/// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-	public class OpenIddictScopeStore<TKey> : OpenIddictScopeStore<OpenIddictScope<TKey>, TKey>
+	public class OpenIddictNHibernateScopeStore<TKey> : OpenIddictNHibernateScopeStore<OpenIddictNHibernateScope<TKey>, TKey>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictScopeStore(IMemoryCache cache
+		public OpenIddictNHibernateScopeStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)
@@ -55,11 +55,11 @@ namespace OpenIddict.NHibernate.Stores
 	/// </summary>
 	/// <typeparam name="TScope">The type of the Scope entity.</typeparam>
 	/// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-	public class OpenIddictScopeStore<TScope, TKey> : IOpenIddictScopeStore<TScope>
-		where TScope : OpenIddictScope<TKey>
+	public class OpenIddictNHibernateScopeStore<TScope, TKey> : IOpenIddictScopeStore<TScope>
+		where TScope : OpenIddictNHibernateScope<TKey>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictScopeStore(IMemoryCache cache
+		public OpenIddictNHibernateScopeStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)

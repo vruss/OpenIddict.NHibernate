@@ -14,13 +14,13 @@ namespace OpenIddict.NHibernate.Mappings
 	/// <typeparam name="TAuthorization">The type of the Authorization entity.</typeparam>
 	/// <typeparam name="TKey">The type of the Key entity.</typeparam>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public class OpenIddictTokenMapping<TToken, TApplication, TAuthorization, TKey> : ClassMapping<TToken>
-		where TToken : OpenIddictToken<TKey, TApplication, TAuthorization>
-		where TApplication : OpenIddictApplication<TKey, TAuthorization, TToken>
-		where TAuthorization : OpenIddictAuthorization<TKey, TApplication, TToken>
+	public class OpenIddictNHibernateTokenMapping<TToken, TApplication, TAuthorization, TKey> : ClassMapping<TToken>
+		where TToken : OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
+		where TApplication : OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
+		where TAuthorization : OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictTokenMapping()
+		public OpenIddictNHibernateTokenMapping()
 		{
 			this.Id(token => token.Id, map =>
 			{

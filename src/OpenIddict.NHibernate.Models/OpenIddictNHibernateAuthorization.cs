@@ -8,9 +8,9 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict authorization.
 	/// </summary>
-	public class OpenIddictAuthorization : OpenIddictAuthorization<string, OpenIddictApplication, OpenIddictToken>
+	public class OpenIddictNHibernateAuthorization : OpenIddictNHibernateAuthorization<string, OpenIddictNHibernateApplication, OpenIddictNHibernateToken>
 	{
-		public OpenIddictAuthorization()
+		public OpenIddictNHibernateAuthorization()
 		{
 			// Generate a new string identifier.
 			this.Id = Guid.NewGuid().ToString();
@@ -20,7 +20,7 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict authorization.
 	/// </summary>
-	public class OpenIddictAuthorization<TKey> : OpenIddictAuthorization<TKey, OpenIddictApplication<TKey>, OpenIddictToken<TKey>>
+	public class OpenIddictNHibernateAuthorization<TKey> : OpenIddictNHibernateAuthorization<TKey, OpenIddictNHibernateApplication<TKey>, OpenIddictNHibernateToken<TKey>>
 		where TKey : IEquatable<TKey>
 	{
 	}
@@ -29,7 +29,7 @@ namespace OpenIddict.NHibernate.Models
 	/// Represents an OpenIddict authorization.
 	/// </summary>
 	[DebuggerDisplay("Id = {Id.ToString(),nq} ; Subject = {Subject,nq} ; Type = {Type,nq} ; Status = {Status,nq}")]
-	public class OpenIddictAuthorization<TKey, TApplication, TToken>
+	public class OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
 		where TKey : notnull, IEquatable<TKey>
 		where TApplication : class
 		where TToken : class
@@ -81,7 +81,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets the list of tokens associated with the current authorization.
 		/// </summary>
-		public virtual ICollection<TToken> Tokens { get; } = new HashSet<TToken>();
+		public virtual ICollection<TToken> Tokens { get; set; } = new HashSet<TToken>();
 
 		/// <summary>
 		/// Gets or sets the type of the current authorization.

@@ -8,9 +8,9 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict application.
 	/// </summary>
-	public class OpenIddictApplication : OpenIddictApplication<string, OpenIddictAuthorization, OpenIddictToken>
+	public class OpenIddictNHibernateApplication : OpenIddictNHibernateApplication<string, OpenIddictNHibernateAuthorization, OpenIddictNHibernateToken>
 	{
-		public OpenIddictApplication()
+		public OpenIddictNHibernateApplication()
 		{
 			// Generate a new string identifier.
 			Id = Guid.NewGuid().ToString();
@@ -20,7 +20,7 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict application.
 	/// </summary>
-	public class OpenIddictApplication<TKey> : OpenIddictApplication<TKey, OpenIddictAuthorization<TKey>, OpenIddictToken<TKey>>
+	public class OpenIddictNHibernateApplication<TKey> : OpenIddictNHibernateApplication<TKey, OpenIddictNHibernateAuthorization<TKey>, OpenIddictNHibernateToken<TKey>>
 		where TKey : IEquatable<TKey>
 	{
 	}
@@ -29,7 +29,7 @@ namespace OpenIddict.NHibernate.Models
 	/// Represents an OpenIddict application.
 	/// </summary>
 	[DebuggerDisplay("Id = {Id.ToString(),nq} ; ClientId = {ClientId,nq} ; ClientType = {ClientType,nq}")]
-	public class OpenIddictApplication<TKey, TAuthorization, TToken>
+	public class OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
 		where TKey : notnull, IEquatable<TKey>
 		where TAuthorization : class
 		where TToken : class
@@ -42,7 +42,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets the list of the authorizations associated with this application.
 		/// </summary>
-		public virtual ICollection<TAuthorization> Authorizations { get; } = new HashSet<TAuthorization>();
+		public virtual ICollection<TAuthorization> Authorizations { get; set; } = new HashSet<TAuthorization>();
 
 		/// <summary>
 		/// Gets or sets the client identifier associated with the current application.
@@ -140,6 +140,6 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets the list of the tokens associated with this application.
 		/// </summary>
-		public virtual ICollection<TToken> Tokens { get; } = new HashSet<TToken>();
+		public virtual ICollection<TToken> Tokens { get; set; } = new HashSet<TToken>();
 	}
 }

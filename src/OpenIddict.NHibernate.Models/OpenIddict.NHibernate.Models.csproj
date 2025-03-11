@@ -2,7 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>2.0.0</Version>
+    <Authors>Viktor Rosvall</Authors>
+    <RepositoryUrl>https://github.com/vruss/OpenIddict.NHibernate</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/vruss/OpenIddict.NHibernate</PackageProjectUrl>
+    <Description>NHibernate 5.* integration models for OpenIddict</Description>
+    <PackageTags>OpenIddict;NHibernate;Models</PackageTags>
+    <PackageId>Community.OpenIddict.NHibernate.Models</PackageId>
   </PropertyGroup>
 
   <PropertyGroup>

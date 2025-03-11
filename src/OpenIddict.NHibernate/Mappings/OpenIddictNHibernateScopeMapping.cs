@@ -12,11 +12,11 @@ namespace OpenIddict.NHibernate.Mappings
 	/// <typeparam name="TScope">The type of the Scope entity.</typeparam>
 	/// <typeparam name="TKey">The type of the Key entity.</typeparam>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public class OpenIddictScopeMapping<TScope, TKey> : ClassMapping<TScope>
-		where TScope : OpenIddictScope<TKey>
+	public class OpenIddictNHibernateScopeMapping<TScope, TKey> : ClassMapping<TScope>
+		where TScope : OpenIddictNHibernateScope<TKey>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictScopeMapping()
+		public OpenIddictNHibernateScopeMapping()
 		{
 			this.Id(scope => scope.Id, map =>
 			{

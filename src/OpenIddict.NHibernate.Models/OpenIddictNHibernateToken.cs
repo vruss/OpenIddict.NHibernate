@@ -7,9 +7,9 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict token.
 	/// </summary>
-	public class OpenIddictToken : OpenIddictToken<string, OpenIddictApplication, OpenIddictAuthorization>
+	public class OpenIddictNHibernateToken : OpenIddictNHibernateToken<string, OpenIddictNHibernateApplication, OpenIddictNHibernateAuthorization>
 	{
-		public OpenIddictToken()
+		public OpenIddictNHibernateToken()
 		{
 			// Generate a new string identifier.
 			this.Id = Guid.NewGuid().ToString();
@@ -19,7 +19,7 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict token.
 	/// </summary>
-	public class OpenIddictToken<TKey> : OpenIddictToken<TKey, OpenIddictApplication<TKey>, OpenIddictAuthorization<TKey>>
+	public class OpenIddictNHibernateToken<TKey> : OpenIddictNHibernateToken<TKey, OpenIddictNHibernateApplication<TKey>, OpenIddictNHibernateAuthorization<TKey>>
 		where TKey : IEquatable<TKey>
 	{
 	}
@@ -28,7 +28,7 @@ namespace OpenIddict.NHibernate.Models
 	/// Represents an OpenIddict token.
 	/// </summary>
 	[DebuggerDisplay("Id = {Id.ToString(),nq} ; Subject = {Subject,nq} ; Type = {Type,nq} ; Status = {Status,nq}")]
-	public class OpenIddictToken<TKey, TApplication, TAuthorization>
+	public class OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
 		where TKey : notnull, IEquatable<TKey>
 		where TApplication : class
 		where TAuthorization : class

@@ -32,26 +32,26 @@ namespace OpenIddict.NHibernate
 			builder.Configure(options => options.DisableAdditionalFiltering = false);
 
 			builder
-				.SetDefaultApplicationEntity<OpenIddictApplication>()
-				.SetDefaultAuthorizationEntity<OpenIddictAuthorization>()
-				.SetDefaultScopeEntity<OpenIddictScope>()
-				.SetDefaultTokenEntity<OpenIddictToken>();
+				.SetDefaultApplicationEntity<OpenIddictNHibernateApplication>()
+				.SetDefaultAuthorizationEntity<OpenIddictNHibernateAuthorization>()
+				.SetDefaultScopeEntity<OpenIddictNHibernateScope>()
+				.SetDefaultTokenEntity<OpenIddictNHibernateToken>();
 
 			builder
-				.ReplaceApplicationStoreResolver<OpenIddictApplicationStoreResolver>()
-				.ReplaceAuthorizationStoreResolver<OpenIddictAuthorizationStoreResolver>()
-				.ReplaceScopeStoreResolver<OpenIddictScopeStoreResolver>()
-				.ReplaceTokenStoreResolver<OpenIddictTokenStoreResolver>();
+				.ReplaceApplicationStoreResolver<OpenIddictNHibernateApplicationStoreResolver>()
+				.ReplaceAuthorizationStoreResolver<OpenIddictNHibernateAuthorizationStoreResolver>()
+				.ReplaceScopeStoreResolver<OpenIddictNHibernateScopeStoreResolver>()
+				.ReplaceTokenStoreResolver<OpenIddictNHibernateTokenStoreResolver>();
 
-			builder.Services.TryAddSingleton<OpenIddictApplicationStoreResolver.TypeResolutionCache>();
-			builder.Services.TryAddSingleton<OpenIddictAuthorizationStoreResolver.TypeResolutionCache>();
-			builder.Services.TryAddSingleton<OpenIddictScopeStoreResolver.TypeResolutionCache>();
-			builder.Services.TryAddSingleton<OpenIddictTokenStoreResolver.TypeResolutionCache>();
+			builder.Services.TryAddSingleton<OpenIddictNHibernateApplicationStoreResolver.TypeResolutionCache>();
+			builder.Services.TryAddSingleton<OpenIddictNHibernateAuthorizationStoreResolver.TypeResolutionCache>();
+			builder.Services.TryAddSingleton<OpenIddictNHibernateScopeStoreResolver.TypeResolutionCache>();
+			builder.Services.TryAddSingleton<OpenIddictNHibernateTokenStoreResolver.TypeResolutionCache>();
 
-			builder.Services.TryAddScoped(typeof(OpenIddictApplicationStore<,,,>));
-			builder.Services.TryAddScoped(typeof(OpenIddictAuthorizationStore<,,,>));
-			builder.Services.TryAddScoped(typeof(OpenIddictScopeStore<,>));
-			builder.Services.TryAddScoped(typeof(OpenIddictTokenStore<,,,>));
+			builder.Services.TryAddScoped(typeof(OpenIddictNHibernateApplicationStore<,,,>));
+			builder.Services.TryAddScoped(typeof(OpenIddictNHibernateAuthorizationStore<,,,>));
+			builder.Services.TryAddScoped(typeof(OpenIddictNHibernateScopeStore<,>));
+			builder.Services.TryAddScoped(typeof(OpenIddictNHibernateTokenStore<,,,>));
 
 			builder.Services.TryAddScoped<IOpenIddictNHibernateContext, OpenIddictNHibernateContext>();
 

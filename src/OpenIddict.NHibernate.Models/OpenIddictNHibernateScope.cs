@@ -7,9 +7,9 @@ namespace OpenIddict.NHibernate.Models
 	/// <summary>
 	/// Represents an OpenIddict scope.
 	/// </summary>
-	public class OpenIddictScope : OpenIddictScope<string>
+	public class OpenIddictNHibernateScope : OpenIddictNHibernateScope<string>
 	{
-		public OpenIddictScope()
+		public OpenIddictNHibernateScope()
 		{
 			// Generate a new string identifier.
 			this.Id = Guid.NewGuid().ToString();
@@ -20,7 +20,7 @@ namespace OpenIddict.NHibernate.Models
 	/// Represents an OpenIddict scope.
 	/// </summary>
 	[DebuggerDisplay("Id = {Id.ToString(),nq} ; Name = {Name,nq}")]
-	public class OpenIddictScope<TKey>
+	public class OpenIddictNHibernateScope<TKey>
 		where TKey : IEquatable<TKey>
 	{
 		/// <summary>

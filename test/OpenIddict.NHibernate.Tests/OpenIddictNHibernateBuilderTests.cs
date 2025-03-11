@@ -31,16 +31,16 @@ namespace OpenIddict.NHibernate.Tests
 			var builder = CreateBuilder(services);
 
 			// Act
-			builder.ReplaceDefaultEntities<CustomApplication, CustomAuthorization, CustomScope, CustomToken, long>();
+			builder.ReplaceDefaultEntities<CustomNHibernateApplication, CustomNHibernateAuthorization, CustomNHibernateScope, CustomNHibernateToken, long>();
 
 			// Assert
 			var provider = services.BuildServiceProvider();
 			var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
 
-			Assert.Equal(typeof(CustomApplication), options.DefaultApplicationType);
-			Assert.Equal(typeof(CustomAuthorization), options.DefaultAuthorizationType);
-			Assert.Equal(typeof(CustomScope), options.DefaultScopeType);
-			Assert.Equal(typeof(CustomToken), options.DefaultTokenType);
+			Assert.Equal(typeof(CustomNHibernateApplication), options.DefaultApplicationType);
+			Assert.Equal(typeof(CustomNHibernateAuthorization), options.DefaultAuthorizationType);
+			Assert.Equal(typeof(CustomNHibernateScope), options.DefaultScopeType);
+			Assert.Equal(typeof(CustomNHibernateToken), options.DefaultTokenType);
 		}
 
 		[Fact]
@@ -57,10 +57,10 @@ namespace OpenIddict.NHibernate.Tests
 			var provider = services.BuildServiceProvider();
 			var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
 
-			Assert.Equal(typeof(OpenIddictApplication<long>), options.DefaultApplicationType);
-			Assert.Equal(typeof(OpenIddictAuthorization<long>), options.DefaultAuthorizationType);
-			Assert.Equal(typeof(OpenIddictScope<long>), options.DefaultScopeType);
-			Assert.Equal(typeof(OpenIddictToken<long>), options.DefaultTokenType);
+			Assert.Equal(typeof(OpenIddictNHibernateApplication<long>), options.DefaultApplicationType);
+			Assert.Equal(typeof(OpenIddictNHibernateAuthorization<long>), options.DefaultAuthorizationType);
+			Assert.Equal(typeof(OpenIddictNHibernateScope<long>), options.DefaultScopeType);
+			Assert.Equal(typeof(OpenIddictNHibernateToken<long>), options.DefaultTokenType);
 		}
 
 		[Fact]
@@ -110,9 +110,9 @@ namespace OpenIddict.NHibernate.Tests
 			return services;
 		}
 
-		public class CustomApplication : OpenIddictApplication<long, CustomAuthorization, CustomToken> { }
-		public class CustomAuthorization : OpenIddictAuthorization<long, CustomApplication, CustomToken> { }
-		public class CustomScope : OpenIddictScope<long> { }
-		public class CustomToken : OpenIddictToken<long, CustomApplication, CustomAuthorization> { }
+		public class CustomNHibernateApplication : OpenIddictNHibernateApplication<long, CustomNHibernateAuthorization, CustomNHibernateToken> { }
+		public class CustomNHibernateAuthorization : OpenIddictNHibernateAuthorization<long, CustomNHibernateApplication, CustomNHibernateToken> { }
+		public class CustomNHibernateScope : OpenIddictNHibernateScope<long> { }
+		public class CustomNHibernateToken : OpenIddictNHibernateToken<long, CustomNHibernateApplication, CustomNHibernateAuthorization> { }
 	}
 }

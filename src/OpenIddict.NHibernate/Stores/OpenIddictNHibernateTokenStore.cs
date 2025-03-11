@@ -23,9 +23,9 @@ namespace OpenIddict.NHibernate.Stores
 	/// <summary>
 	/// Provides methods allowing to manage the tokens stored in a database.
 	/// </summary>
-	public class OpenIddictTokenStore : OpenIddictTokenStore<OpenIddictToken, OpenIddictApplication, OpenIddictAuthorization, string>
+	public class OpenIddictNHibernateTokenStore : OpenIddictNHibernateTokenStore<OpenIddictNHibernateToken, OpenIddictNHibernateApplication, OpenIddictNHibernateAuthorization, string>
 	{
-		public OpenIddictTokenStore(IMemoryCache cache
+		public OpenIddictNHibernateTokenStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)
@@ -38,10 +38,10 @@ namespace OpenIddict.NHibernate.Stores
 	/// Provides methods allowing to manage the tokens stored in a database.
 	/// </summary>
 	/// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-	public class OpenIddictTokenStore<TKey> : OpenIddictTokenStore<OpenIddictToken<TKey>, OpenIddictApplication<TKey>, OpenIddictAuthorization<TKey>, TKey>
+	public class OpenIddictNHibernateTokenStore<TKey> : OpenIddictNHibernateTokenStore<OpenIddictNHibernateToken<TKey>, OpenIddictNHibernateApplication<TKey>, OpenIddictNHibernateAuthorization<TKey>, TKey>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictTokenStore(IMemoryCache cache
+		public OpenIddictNHibernateTokenStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)
@@ -57,13 +57,13 @@ namespace OpenIddict.NHibernate.Stores
 	/// <typeparam name="TApplication">The type of the Application entity.</typeparam>
 	/// <typeparam name="TAuthorization">The type of the Authorization entity.</typeparam>
 	/// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-	public class OpenIddictTokenStore<TToken, TApplication, TAuthorization, TKey> : IOpenIddictTokenStore<TToken>
-		where TToken : OpenIddictToken<TKey, TApplication, TAuthorization>
-		where TApplication : OpenIddictApplication<TKey, TAuthorization, TToken>
-		where TAuthorization : OpenIddictAuthorization<TKey, TApplication, TToken>
+	public class OpenIddictNHibernateTokenStore<TToken, TApplication, TAuthorization, TKey> : IOpenIddictTokenStore<TToken>
+		where TToken : OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
+		where TApplication : OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
+		where TAuthorization : OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
 		where TKey : IEquatable<TKey>
 	{
-		public OpenIddictTokenStore(IMemoryCache cache
+		public OpenIddictNHibernateTokenStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
 			, IOptionsMonitor<OpenIddictNHibernateOptions> options
 		)
