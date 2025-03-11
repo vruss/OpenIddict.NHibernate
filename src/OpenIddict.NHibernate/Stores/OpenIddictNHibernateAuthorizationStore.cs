@@ -52,18 +52,35 @@ namespace OpenIddict.NHibernate.Stores
 		}
 	}
 
+	public class OpenIddictNHibernateAuthorizationStore<TAuthorization, TApplication, TToken, TKey> : OpenIddictNHibernateAuthorizationStore<TAuthorization, TApplication, TToken, TKey, TKey, TKey>
+		where TAuthorization : OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
+		where TApplication : OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
+		where TToken : OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
+		where TKey : IEquatable<TKey>
+	{
+		public OpenIddictNHibernateAuthorizationStore(IMemoryCache cache
+			, IOpenIddictNHibernateContext context
+			, IOptionsMonitor<OpenIddictNHibernateOptions> options
+			)
+			: base(cache, context, options)
+		{
+		}
+	}
+
 	/// <summary>
 	/// Provides methods allowing to manage the authorizations stored in a database.
 	/// </summary>
 	/// <typeparam name="TAuthorization">The type of the Authorization entity.</typeparam>
 	/// <typeparam name="TApplication">The type of the Application entity.</typeparam>
 	/// <typeparam name="TToken">The type of the Token entity.</typeparam>
-	/// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-	public class OpenIddictNHibernateAuthorizationStore<TAuthorization, TApplication, TToken, TKey> : IOpenIddictAuthorizationStore<TAuthorization>
-		where TAuthorization : OpenIddictNHibernateAuthorization<TKey, TApplication, TToken>
-		where TApplication : OpenIddictNHibernateApplication<TKey, TAuthorization, TToken>
-		where TToken : OpenIddictNHibernateToken<TKey, TApplication, TAuthorization>
-		where TKey : IEquatable<TKey>
+	/// <typeparam name="TAuthorizationKey">The type of the entity primary keys.</typeparam>
+	public class OpenIddictNHibernateAuthorizationStore<TAuthorization, TApplication, TToken, TAuthorizationKey, TApplicationKey, TTokenKey> : IOpenIddictAuthorizationStore<TAuthorization>
+		where TAuthorization : OpenIddictNHibernateAuthorization<TAuthorizationKey, TApplication, TToken>
+		where TApplication : OpenIddictNHibernateApplication<TApplicationKey, TAuthorization, TToken>
+		where TToken : OpenIddictNHibernateToken<TTokenKey, TApplication, TAuthorization>
+		where TAuthorizationKey : IEquatable<TAuthorizationKey>
+		where TApplicationKey : IEquatable<TApplicationKey>
+		where TTokenKey : IEquatable<TTokenKey>
 	{
 		public OpenIddictNHibernateAuthorizationStore(IMemoryCache cache
 			, IOpenIddictNHibernateContext context
@@ -209,7 +226,7 @@ namespace OpenIddict.NHibernate.Stores
 
 			if (!string.IsNullOrEmpty(client))
 			{
-				var key = this.ConvertIdentifierFromString(client);
+				var key = this.ConvertIdentifierFromString<TApplicationKey>(client);
 
 				query = query.Where(authorization => authorization.Application != null && authorization.Application!.Id!.Equals(key));
 			}
@@ -256,7 +273,7 @@ namespace OpenIddict.NHibernate.Stores
 			async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken ct)
 			{
 				var session = await this.Context.GetSessionAsync(ct);
-				var key = this.ConvertIdentifierFromString(identifier);
+				var key = this.ConvertIdentifierFromString<TApplicationKey>(identifier);
 
 				var authorizations = session
 					.Query<TAuthorization>()
@@ -291,7 +308,7 @@ namespace OpenIddict.NHibernate.Stores
 
 			// I hope this populates the lazy properties too
 			var authorization = await session
-				.GetAsync<TAuthorization>(this.ConvertIdentifierFromString(identifier), cancellationToken);
+				.GetAsync<TAuthorization>(this.ConvertIdentifierFromString<TAuthorizationKey>(identifier), cancellationToken);
 
 			return authorization;
 		}
@@ -729,7 +746,7 @@ namespace OpenIddict.NHibernate.Stores
 
 			if (!string.IsNullOrEmpty(client))
 			{
-				var key = this.ConvertIdentifierFromString(client);
+				var key = this.ConvertIdentifierFromString<TApplicationKey>(client);
 
 				query = query.Where(authorization => authorization.Application != null && authorization.Application!.Id!.Equals(key));
 			}
@@ -790,7 +807,7 @@ namespace OpenIddict.NHibernate.Stores
 		{
 			ArgumentException.ThrowIfNullOrEmpty(identifier);
 
-			var key = this.ConvertIdentifierFromString(identifier);
+			var key = this.ConvertIdentifierFromString<TApplicationKey>(identifier);
 
 			List<Exception>? exceptions = null;
 
@@ -912,7 +929,7 @@ namespace OpenIddict.NHibernate.Stores
 
 			if (!string.IsNullOrEmpty(identifier))
 			{
-				authorization.Application = await session.LoadAsync<TApplication>(this.ConvertIdentifierFromString(identifier), cancellationToken);
+				authorization.Application = await session.LoadAsync<TApplication>(this.ConvertIdentifierFromString<TApplicationKey>(identifier), cancellationToken);
 			}
 
 			else
@@ -1120,7 +1137,8 @@ namespace OpenIddict.NHibernate.Stores
 		/// </summary>
 		/// <param name="identifier">The identifier to convert.</param>
 		/// <returns>An instance of <typeparamref name="TKey"/> representing the provided identifier.</returns>
-		public virtual TKey? ConvertIdentifierFromString(string? identifier)
+		public virtual TKey? ConvertIdentifierFromString<TKey>(string? identifier)
+			where TKey : IEquatable<TKey>
 		{
 			if (string.IsNullOrEmpty(identifier))
 			{
@@ -1137,7 +1155,8 @@ namespace OpenIddict.NHibernate.Stores
 		/// </summary>
 		/// <param name="identifier">The identifier to convert.</param>
 		/// <returns>A <see cref="string"/> representation of the provided identifier.</returns>
-		public virtual string? ConvertIdentifierToString(TKey? identifier)
+		public virtual string? ConvertIdentifierToString<TKey>(TKey? identifier)
+			where TKey : IEquatable<TKey>
 		{
 			if (Equals(identifier, default(TKey)))
 			{

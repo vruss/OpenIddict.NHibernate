@@ -42,7 +42,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets the list of the authorizations associated with this application.
 		/// </summary>
-		public virtual ICollection<TAuthorization> Authorizations { get; set; } = new HashSet<TAuthorization>();
+		public virtual ICollection<TAuthorization> Authorizations { get; } = new HashSet<TAuthorization>();
 
 		/// <summary>
 		/// Gets or sets the client identifier associated with the current application.
@@ -140,6 +140,6 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets the list of the tokens associated with this application.
 		/// </summary>
-		public virtual ICollection<TToken> Tokens { get; set; } = new HashSet<TToken>();
+		public virtual ICollection<TToken> Tokens { get; } = new HashSet<TToken>();
 	}
 }
