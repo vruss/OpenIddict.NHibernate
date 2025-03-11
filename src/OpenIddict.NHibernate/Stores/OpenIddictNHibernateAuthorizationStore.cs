@@ -1111,7 +1111,7 @@ namespace OpenIddict.NHibernate.Stores
 
 			// Generate a new concurrency token and attach it
 			// to the authorization before persisting the changes.
-			authorization.ConcurrencyToken = Guid.NewGuid().ToString();
+			authorization.ConcurrencyToken = Random.Shared.Next();
 
 			try
 			{

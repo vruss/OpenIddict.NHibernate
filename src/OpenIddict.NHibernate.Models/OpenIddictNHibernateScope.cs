@@ -26,7 +26,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the concurrency token.
 		/// </summary>
-		public virtual string? ConcurrencyToken { get; set; } = Guid.NewGuid().ToString();
+		public virtual int? ConcurrencyToken { get; set; } = Random.Shared.Next();
 
 		/// <summary>
 		/// Gets or sets the public description associated with the current scope.

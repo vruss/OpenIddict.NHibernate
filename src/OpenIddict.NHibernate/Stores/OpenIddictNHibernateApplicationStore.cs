@@ -1272,7 +1272,7 @@ namespace OpenIddict.NHibernate.Stores
 
 			// Generate a new concurrency token and attach it
 			// to the application before persisting the changes.
-			application.ConcurrencyToken = Guid.NewGuid().ToString();
+			application.ConcurrencyToken = Random.Shared.Next();
 
 			try
 			{
