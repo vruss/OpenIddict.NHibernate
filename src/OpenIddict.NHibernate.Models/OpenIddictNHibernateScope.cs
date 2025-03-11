@@ -26,7 +26,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the concurrency token.
 		/// </summary>
-		public virtual int? ConcurrencyToken { get; set; } = Random.Shared.Next();
+		public virtual int ConcurrencyToken { get; set; } = Random.Shared.Next();
 
 		/// <summary>
 		/// Gets or sets the public description associated with the current scope.
@@ -61,7 +61,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the unique name associated with the current scope.
 		/// </summary>
-		public virtual string? Name { get; set; }
+		public virtual string Name { get; set; }
 
 		/// <summary>
 		/// Gets or sets the additional properties serialized as a JSON object,

@@ -47,7 +47,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the client identifier associated with the current application.
 		/// </summary>
-		public virtual string? ClientId { get; set; }
+		public virtual string ClientId { get; set; }
 
 		/// <summary>
 		/// Gets or sets the client secret associated with the current application.
@@ -64,7 +64,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the concurrency token.
 		/// </summary>
-		public virtual int? ConcurrencyToken { get; set; } = Random.Shared.Next();
+		public virtual int ConcurrencyToken { get; set; } = Random.Shared.Next();
 
 		/// <summary>
 		/// Gets or sets the consent type associated with the current application.

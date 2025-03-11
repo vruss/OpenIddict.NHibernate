@@ -46,7 +46,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the concurrency token.
 		/// </summary>
-		public virtual int? ConcurrencyToken { get; set; } = Random.Shared.Next();
+		public virtual int ConcurrencyToken { get; set; } = Random.Shared.Next();
 
 		/// <summary>
 		/// Gets or sets the UTC creation date of the current token.
@@ -93,7 +93,7 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the status of the current token.
 		/// </summary>
-		public virtual string? Status { get; set; }
+		public virtual string Status { get; set; }
 
 		/// <summary>
 		/// Gets or sets the subject associated with the current token.
@@ -103,6 +103,6 @@ namespace OpenIddict.NHibernate.Models
 		/// <summary>
 		/// Gets or sets the type of the current token.
 		/// </summary>
-		public virtual string? Type { get; set; }
+		public virtual string Type { get; set; }
 	}
 }
