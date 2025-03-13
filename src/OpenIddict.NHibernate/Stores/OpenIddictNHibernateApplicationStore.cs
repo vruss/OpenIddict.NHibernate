@@ -159,6 +159,11 @@ namespace OpenIddict.NHibernate.Stores
 
 			var session = await this.Context.GetSessionAsync(cancellationToken);
 
+			if (!session.Contains(application))
+			{
+				application = await session.MergeAsync(application, cancellationToken);
+			}
+
 			await session.PersistAsync(application, cancellationToken);
 			await session.FlushAsync(cancellationToken);
 		}

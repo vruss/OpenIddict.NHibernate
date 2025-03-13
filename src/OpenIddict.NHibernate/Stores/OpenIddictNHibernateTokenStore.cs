@@ -812,6 +812,7 @@ namespace OpenIddict.NHibernate.Stores
 				// Delete all the tokens associated with the application.
 				var deletedEntries = await session
 					.Query<TToken>()
+					.Fetch(token => token.Authorization)
 					.Where(token => token.CreationDate < date)
 					.Where(token => (token.Status != OpenIddictConstants.Statuses.Inactive && token.Status != OpenIddictConstants.Statuses.Valid)
 						|| (token.Authorization != null && token.Authorization.Status != OpenIddictConstants.Statuses.Valid)
