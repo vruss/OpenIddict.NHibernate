@@ -809,17 +809,32 @@ namespace OpenIddict.NHibernate.Stores
 
 			try
 			{
-				// Delete all the tokens associated with the application.
-				var deletedEntries = await session
+				var deletedEntries = 0;
+
+				// First query: load entities using an association join (if needed)
+				var tokensToDelete = await session
 					.Query<TToken>()
 					.Fetch(token => token.Authorization)
 					.Where(token => token.CreationDate < date)
 					.Where(token => (token.Status != OpenIddictConstants.Statuses.Inactive && token.Status != OpenIddictConstants.Statuses.Valid)
 						|| (token.Authorization != null && token.Authorization.Status != OpenIddictConstants.Statuses.Valid)
-						|| token.ExpirationDate < DateTime.UtcNow
-					)
-					.OrderBy(token => token.Id)
-					.DeleteAsync(cancellationToken);
+						|| token.ExpirationDate < DateTime.UtcNow)
+					.Select(token => token.Id)
+					.ToListAsync(cancellationToken);
+
+				const int sqlServerParameterMaxLimit = 2000;
+				for (var i = 0; i < tokensToDelete.Count; i += sqlServerParameterMaxLimit)
+				{
+					var batch = tokensToDelete
+						.Skip(i)
+						.Take(sqlServerParameterMaxLimit)
+						.ToList();
+
+					deletedEntries += await session
+						.Query<TToken>()
+						.Where(token => batch.Contains(token.Id))
+						.DeleteAsync(cancellationToken);
+				}
 
 				await session.FlushAsync(cancellationToken);
 				await transaction.CommitAsync(cancellationToken);

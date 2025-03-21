@@ -595,7 +595,7 @@ namespace OpenIddict.NHibernate.Stores
 			// Note: parsing the stringified addresses is an expensive operation.
 			// To mitigate that, the resulting array is stored in the memory cache.
 			var key = string.Concat("808ACFC7-1408-4749-AB71-24CD91E5D9AD", "\x1e", application.PostLogoutRedirectUris);
-			var uris = Cache.GetOrCreate(key, entry =>
+			var uris = this.Cache.GetOrCreate(key, entry =>
 			{
 				entry.SetPriority(CacheItemPriority.High)
 					.SetSlidingExpiration(TimeSpan.FromMinutes(1));

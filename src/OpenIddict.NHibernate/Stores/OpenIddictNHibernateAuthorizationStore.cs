@@ -704,14 +704,31 @@ namespace OpenIddict.NHibernate.Stores
 
 			try
 			{
+				var deletedEntries = 0;
+
 				// Delete all the tokens associated with the application.
-				var deletedEntries = await session
+				var entriesToBeDeleted = await session
 					.Query<TAuthorization>()
 					.Fetch(authorization => authorization.Tokens)
 					.Where(authorization => authorization.CreationDate < date)
 					.Where(authorization => authorization.Status != OpenIddictConstants.Statuses.Valid || authorization.Type == OpenIddictConstants.AuthorizationTypes.AdHoc)
 					.Where(authorization => authorization.Tokens.Any())
-					.DeleteAsync(cancellationToken);
+					.Select(authorization => authorization.Id)
+					.ToListAsync(cancellationToken);
+
+				const int sqlServerParameterMaxLimit = 2000;
+				for (var i = 0; i < entriesToBeDeleted.Count; i += sqlServerParameterMaxLimit)
+				{
+					var batch = entriesToBeDeleted
+						.Skip(i)
+						.Take(sqlServerParameterMaxLimit)
+						.ToList();
+
+					deletedEntries += await session
+						.Query<TAuthorization>()
+						.Where(token => batch.Contains(token.Id))
+						.DeleteAsync(cancellationToken);
+				}
 
 				await session.FlushAsync(cancellationToken);
 				await transaction.CommitAsync(cancellationToken);
